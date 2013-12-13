@@ -127,7 +127,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
       Puppet.debug("trying property: #{property}: #{should[property]}")
       next if property != :vlanname
       execute("name #{should[property]}")
-      Puppet.info "Created VLAN #{id} with Name #{should[property]}"
+      Puppet.info "Created VLAN #{id}"
     end
     execute("exit")
     execute("exit")
