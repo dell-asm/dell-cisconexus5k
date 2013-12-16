@@ -16,6 +16,22 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
   def retrieve
     @facts = {}
 
+    out = @transport.command("sh ver")
+
+    for line in out.split("\n")
+      if (line =~ /(?:Cisco )?(IOS)\s*(?:\(tm\) |Software, )?(?:\w+)\s+Software\s+\(\w+-(\w+)-\w+\), Version ([0-9.()A-Za-z]+),/)
+        @facts["operatingsystem"] = $1
+        @facts["operatingsystemrelease"] = $3
+        @facts["operatingsystemfeature"] = $2
+      end
+      if (line =~ /kickstart\ image\ file\ is:\s+(\S+)/)
+        @facts["kickstartimage"] = $1
+      end
+      if (line =~ /system\ image\ file\ is:\s+(\S+)/)
+        @facts["systemimage"] = $1
+      end
+    end
+
     interface_res = @transport.command("show interface brief")
 
     ethernet_interface_count = 0
