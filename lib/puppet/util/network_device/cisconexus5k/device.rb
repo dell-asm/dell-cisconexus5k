@@ -4,6 +4,15 @@ require 'puppet/util'
 require 'puppet/util/network_device/base'
 require 'puppet/util/network_device/cisconexus5k/facts'
 
+#
+# Main device class for Cisco nexus5k module
+# This class is called by the provider and contains methods
+# for performing all operations
+# * parse_vlans: get a list of VLANs on the device
+#   as a hash of hash
+# * update_vlan: delete/create VLAN
+#
+
 class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkDevice::Base
 
   include Puppet::Util::NetworkDevice::IPCalc
@@ -29,7 +38,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     transport.command("terminal length 0") do |out|
       enable if out =~ />\s?\z/n
     end
-    find_capabilities
+    #find_capabilities
   end
 
   def disconnect
@@ -64,17 +73,17 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     transport.command(enable_password)
   end
 
-  def support_vlan_brief?
-    !! @support_vlan_brief
-  end
+  #def support_vlan_brief?
+  #  !! @support_vlan_brief
+  #end
 
-  def find_capabilities
-    out = execute("sh vlan brief")
-    lines = out.split("\n")
-    lines.shift; lines.pop
+  #def find_capabilities
+  #  out = execute("sh vlan brief")
+  #  lines = out.split("\n")
+  #  lines.shift; lines.pop
 
-    @support_vlan_brief = ! (lines.first =~ /^%/)
-  end
+  #  @support_vlan_brief = ! (lines.first =~ /^%/)
+  #end
 
   def facts
     @facts ||= Puppet::Util::NetworkDevice::Cisconexus5k::Facts.new(transport)
@@ -91,8 +100,8 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     lines = out.split("\n")
     lines.shift; lines.shift; lines.shift; lines.pop
     vlan = nil
-    lines.each do |l|
-      case l
+    lines.each do |line|
+     case line
             # vlan    name    status
       when /^(\d+)\s+(\w+)\s+(\w+)\s+([a-zA-Z0-9,\/. ]+)\s*$/
         vlan = { :name => $1, :vlanname => $2, :status => $3, :interfaces => [] }
@@ -106,6 +115,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
           vlan[:interfaces] += $1.strip.split(/\s*,\s*/)
         end
       else
+        next 
       end
     end
     vlans
