@@ -84,7 +84,30 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
 
   #  @support_vlan_brief = ! (lines.first =~ /^%/)
   #end
+IF = {
+    :FastEthernet => %w{FastEthernet FastEth Fast FE Fa F},
+    :GigabitEthernet => %w{GigabitEthernet GigEthernet GigEth GE Gi G},
+    :TenGigabitEthernet => %w{TenGigabitEthernet TE Te},
+    :Ethernet => %w{Ethernet Eth E},
+    :Serial => %w{Serial Se S},
+    :PortChannel => %w{PortChannel Port-Channel Po},
+    :POS => %w{POS P},
+    :VLAN => %w{VLAN VL V},
+    :Loopback => %w{Loopback Loop Lo},
+    :ATM => %w{ATM AT A},
+    :Dialer => %w{Dialer Dial Di D},
+    :VirtualAccess => %w{Virtual-Access Virtual-A Virtual Virt}
+  }
 
+  def canonalize_ifname(interface)
+    IF.each do |k,ifnames|
+      if found = ifnames.find { |ifname| interface =~ /^#{ifname}\s*\d/i }
+        found = /^#{found}(.+)\Z/i.match(interface)
+        return "#{k.to_s}#{found[1]}".gsub(/\s+/,'')
+      end
+    end
+    interface
+  end
   def facts
     @facts ||= Puppet::Util::NetworkDevice::Cisconexus5k::Facts.new(transport)
     facts = {}
@@ -120,7 +143,28 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     end
     vlans
   end
-
+ def parse_zones
+   zones = {}
+   out = execute("show zone")
+   lines = out.split("\n")
+   lines.shift; lines.pop
+   zone = nil
+   lines.each do |l|
+    if l =~ /^zone name\s*(\S*)\s*vsan\s*(\d*)/
+        zone = { :name => $1, :vsanid => $2, :membertype => [], :member => [] }
+    end
+    if l =~ /pwwn\s*(\S*)/
+        zone[:member] += $1.map{ |ifn| canonalize_ifname(ifn) }
+        zone[:membertype] += 'pwwn'.map{ |ifn| canonalize_ifname(ifn) }
+    end
+    if l =~/fcalias name\s*(\S*)\s*vsan\s*(\d*)/
+        zone[:member] += $1.map{ |ifn| canonalize_ifname(ifn) }
+        zone[:membertype] += 'fcalias'.map{ |ifn| canonalize_ifname(ifn) }
+    end
+    zones[zone[:name]] = zone
+   end 
+   zones 
+ end
   def update_vlan(id, is = {}, should = {})
     if should[:ensure] == :absent
       Puppet.info "Removing VLAN #{id} from the device"
@@ -142,5 +186,64 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     execute("exit")
     execute("exit")
   end
-
+  def update_zone(id, is = {}, should = {},membertype = {}, member = {})
+    vsanid = should[:vsanid]
+    mem = member.split(",")
+    puts "zoneName : #{id} vsanid : #{vsanid} membertype : #{membertype} member : #{member} "
+    if should[:ensure] == :absent
+      Puppet.info "Removing #{id} from device zone"
+      execute("conf t")
+      Puppet.debug "conf t"
+      out = execute("zone name #{id} vsan #{vsanid}")
+      Puppet.debug "zone name #{id} vsan #{vsanid}"
+      if ( out =~ /% Invalid/ )
+        raise "invalid vsan id"
+      end
+      if ( out =~ /not configured/ )
+        raise "invalid vsam id"
+      end
+      mem.each do |memberval|
+       out = execute("no member #{membertype} #{memberval}")
+       Puppet.debug "no member #{membertype} #{memberval}"
+       #if ( out =~ /% Invalid/ )
+       #  raise "invalid command input #{memberval}"
+       #end
+      end
+      #check whether its was a last member of not
+      out = execute("show zone name #{id} vsan #{vsanid}")
+      Puppet.debug "show zone name #{id} vsan #{vsanid}"
+      lines = out.split("\n")
+      lines.shift; lines.pop
+      outputlength = lines.length
+      if ( outputlength == 1 )
+        #No last member need to remove the zone"
+        execute("no zone name #{id} vsan #{vsanid}")
+        Puppet.debug "no zone name #{id} vsan #{vsanid}"
+      end
+      execute("exit")
+      execute("exit")
+      return
+    end
+    # We're creating or updating an entry
+    execute("conf t")
+    Puppet.debug "conf t"
+    out = execute("zone name #{id} vsan #{vsanid}")
+    Puppet.debug "zone name #{id} vsan #{vsanid}"
+    if ( out =~ /% Invalid/ )
+      raise "invalid vsan id"
+    end
+    if ( out =~ /not configured/ )
+      raise "invalid vsam id"  
+    end
+      
+    mem.each do |memberval|
+      out =  execute("member #{membertype} #{memberval}")
+      Puppet.debug "member #{membertype} #{memberval}"
+      if ( out =~ /% Invalid/ )
+        raise "invalid command input #{memberval}"
+      end
+    end
+    execute("exit")
+    execute("exit")
+  end
 end
