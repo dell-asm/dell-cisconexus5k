@@ -233,7 +233,6 @@ IF = {
   def update_zone(id, is = {}, should = {},membertype = {}, member = {})
     vsanid = should[:vsanid]
     mem = member.split(",")
-    puts "zoneName : #{id} vsanid : #{vsanid} membertype : #{membertype} member : #{member} "
     if should[:ensure] == :absent
       Puppet.info "Removing #{id} from device zone"
       execute("conf t")
