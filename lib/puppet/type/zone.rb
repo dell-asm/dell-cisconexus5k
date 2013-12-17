@@ -11,6 +11,7 @@ Puppet::Type.newtype(:zone) do
 
     newparam(:name) do
       desc "Zone name."
+
       isnamevar
       newvalues(/^\S+/)
       validate do |value|
@@ -21,7 +22,8 @@ Puppet::Type.newtype(:zone) do
     end
 
     newproperty(:vsanid) do
-      desc " vsanid "
+      desc "vsanid"
+
       newvalues(/^\d+/)
       validate do |value|
         if value.strip.length == 0
@@ -30,12 +32,15 @@ Puppet::Type.newtype(:zone) do
       end
 
     end
+    
     newproperty(:membertype) do
-      desc " member type  "
+      desc "member type"
+
       newvalues(:'device-alias', :fcalias, :fcid, :fwwn, :pwwn)
     end
+
     newproperty(:member) do
-      desc " member wwpn "
+      desc "member wwpn"
     end
 
 end

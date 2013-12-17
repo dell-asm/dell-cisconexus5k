@@ -84,7 +84,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
 
   #  @support_vlan_brief = ! (lines.first =~ /^%/)
   #end
-IF = {
+  IF = {
     :FastEthernet => %w{FastEthernet FastEth Fast FE Fa F},
     :GigabitEthernet => %w{GigabitEthernet GigEthernet GigEth GE Gi G},
     :TenGigabitEthernet => %w{TenGigabitEthernet TE Te},
@@ -108,6 +108,7 @@ IF = {
     end
     interface
   end
+
   def facts
     @facts ||= Puppet::Util::NetworkDevice::Cisconexus5k::Facts.new(transport)
     facts = {}
@@ -143,28 +144,29 @@ IF = {
     end
     vlans
   end
- def parse_zones
-   zones = {}
-   out = execute("show zone")
-   lines = out.split("\n")
-   lines.shift; lines.pop
-   zone = nil
-   lines.each do |l|
-    if l =~ /^zone name\s*(\S*)\s*vsan\s*(\d*)/
+  
+  def parse_zones
+    zones = {}
+    out = execute("show zone")
+    lines = out.split("\n")
+    lines.shift; lines.pop
+    zone = nil
+    lines.each do |l|
+      if l =~ /^zone name\s*(\S*)\s*vsan\s*(\d*)/
         zone = { :name => $1, :vsanid => $2, :membertype => [], :member => [] }
-    end
-    if l =~ /pwwn\s*(\S*)/
+      end
+      if l =~ /pwwn\s*(\S*)/
         zone[:member] += $1.map{ |ifn| canonalize_ifname(ifn) }
         zone[:membertype] += 'pwwn'.map{ |ifn| canonalize_ifname(ifn) }
-    end
-    if l =~/fcalias name\s*(\S*)\s*vsan\s*(\d*)/
+      end
+      if l =~/fcalias name\s*(\S*)\s*vsan\s*(\d*)/
         zone[:member] += $1.map{ |ifn| canonalize_ifname(ifn) }
         zone[:membertype] += 'fcalias'.map{ |ifn| canonalize_ifname(ifn) }
-    end
-    zones[zone[:name]] = zone
-   end 
-   zones 
- end
+      end
+      zones[zone[:name]] = zone
+    end 
+    zones 
+  end
  
   def parse_alias
        malias ={}
@@ -207,7 +209,7 @@ IF = {
         execute("device-alias commit") 
         execute("exit")
         execute("exit")
- end 
+  end 
  
   def update_vlan(id, is = {}, should = {})
     if should[:ensure] == :absent

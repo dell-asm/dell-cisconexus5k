@@ -21,7 +21,7 @@ Puppet::Type.type(:alias).provide :cisconexus5k, :parent => Puppet::Provider::Ci
   # Clear out the cached values.
   def flush
       Puppet.debug "Former_properties #{former_properties}"
-      Puppet.debug   "properties #{properties}" 
+      Puppet.debug "properties #{properties}" 
         device.command do |dev|
              dev.update_alias(resource[:name], former_properties, properties)
          end
