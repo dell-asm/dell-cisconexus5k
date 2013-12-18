@@ -73,17 +73,6 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     transport.command(enable_password)
   end
 
-  #def support_vlan_brief?
-  #  !! @support_vlan_brief
-  #end
-
-  #def find_capabilities
-  #  out = execute("sh vlan brief")
-  #  lines = out.split("\n")
-  #  lines.shift; lines.pop
-
-  #  @support_vlan_brief = ! (lines.first =~ /^%/)
-  #end
   IF = {
     :FastEthernet => %w{FastEthernet FastEth Fast FE Fa F},
     :GigabitEthernet => %w{GigabitEthernet GigEthernet GigEth GE Gi G},
@@ -134,7 +123,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
         end
         vlans[vlan[:name]] = vlan
       when /^\s+([a-zA-Z0-9,\/. ]+)\s*$/
-        raise "invalid sh vlan summary output" unless vlan
+        raise "Invalid show vlan summary output" unless vlan
         if $1.strip.length > 0
           vlan[:interfaces] += $1.strip.split(/\s*,\s*/)
         end
@@ -201,7 +190,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
         Puppet.debug "id #{id} member #{member}  "
         out = execute("device-alias name  #{id} pwwn #{member}")
        if ( out =~ /% Invalid/ )
-         raise "invalid command input #{member}"
+         raise "The command input #{memberval} is invalid"
         end 
         if (out =~ /already present/)
             raise "Another device-alias already present with the same pwwn"
@@ -232,20 +221,21 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     execute("exit")
     execute("exit")
   end
+
   def update_zone(id, is = {}, should = {},membertype = {}, member = {})
     vsanid = should[:vsanid]
     mem = member.split(",")
     if should[:ensure] == :absent
-      Puppet.info "Removing #{id} from device zone"
+      Puppet.info "Removing zone #{id} from device"
       execute("conf t")
       Puppet.debug "conf t"
       out = execute("zone name #{id} vsan #{vsanid}")
       Puppet.debug "zone name #{id} vsan #{vsanid}"
       if ( out =~ /% Invalid/ )
-        raise "invalid vsan id"
+        raise "The VSAN Id #{vsanid} is not valid on the switch"
       end
       if ( out =~ /not configured/ )
-        raise "invalid vsam id"
+        raise "The VSAN Id #{vsanid} is not valid on the switch"
       end
       mem.each do |memberval|
        out = execute("no member #{membertype} #{memberval}")
@@ -269,24 +259,24 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
       execute("exit")
       return
     end
-	Puppet.info "Creating #{id} from device zone"
+	Puppet.info "Creating zone #{id} on device"
     # We're creating or updating an entry
     execute("conf t")
     Puppet.debug "conf t"
     out = execute("zone name #{id} vsan #{vsanid}")
     Puppet.debug "zone name #{id} vsan #{vsanid}"
     if ( out =~ /% Invalid/ )
-      raise "invalid vsan id"
+      raise "The VSAN Id #{vsanid} is not valid on the switch"
     end
     if ( out =~ /not configured/ )
-      raise "invalid vsam id"  
+      raise "Invalid vsam id"  
     end
       
     mem.each do |memberval|
       out =  execute("member #{membertype} #{memberval}")
       Puppet.debug "member #{membertype} #{memberval}"
       if ( out =~ /% Invalid/ )
-        raise "invalid command input #{memberval}"
+        raise "The command input #{memberval} is invalid"
       end
     end
     execute("exit")
