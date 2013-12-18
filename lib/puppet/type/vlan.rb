@@ -12,8 +12,14 @@ Puppet::Type.newtype(:vlan) do
     newparam(:name) do
       desc "The numeric VLAN ID."
       isnamevar
-
-      newvalues(/^\d+/)
+      validate do |value|
+        if value =~ /0/
+          raise ArgumentError, "The VLAN Id 0 is invalid."
+        end
+        if value !~ /^\d+/
+          raise ArgumentError, "The VLAN Id should be numeric."
+        end
+      end
     end
 
     newproperty(:vlanname) do

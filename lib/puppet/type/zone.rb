@@ -16,7 +16,7 @@ Puppet::Type.newtype(:zone) do
       newvalues(/^\S+/)
       validate do |value|
         if value.strip.length == 0
-            raise ArgumentError, "Invalid zone name."
+            raise ArgumentError, "The zone name is invalid."
         end
       end
     end
@@ -24,10 +24,15 @@ Puppet::Type.newtype(:zone) do
     newproperty(:vsanid) do
       desc "vsanid"
 
-      newvalues(/^\d+/)
       validate do |value|
         if value.strip.length == 0
-            raise ArgumentError, "Invalid vsan id."
+            raise ArgumentError, "The VSAN Id is invalid."
+        end
+        if value =~ /0/
+          raise ArgumentError, "The VSAN Id 0 is invalid."
+        end
+        if value !~ /^\d+/
+          raise ArgumentError, "The VSAN Id should be numeric."
         end
       end
 
