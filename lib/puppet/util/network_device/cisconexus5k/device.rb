@@ -9,7 +9,8 @@ require 'puppet/util/network_device/cisconexus5k/facts'
 # This class is called by the provider and contains methods
 # for performing all operations
 # * parse_vlans: get a list of VLANs on the device
-#   as a hash of hash
+#   as a hash of hash, used by the lookup function of the 
+#   provider
 # * update_vlan: delete/create VLAN
 #
 
@@ -158,46 +159,47 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
   end
  
   def parse_alias
-       malias ={}
-       out=execute("show device-alias database") 
-        Puppet.debug "show device-alias database \n  #{out} "
-       lines = out.split("\n")
-       lines.shift ; lines.pop
-       lines.each do |l|
-             if l =~ /device-alias\s*name\s*(\S*)\s*(\S*)\s*(\S*)/
-                 m_alias = { :name => $1, :member => $3 }        
-                 malias[m_alias[:name]] = m_alias
-             end
-        end
-       malias
-   end 
+    malias ={}
+    out=execute("show device-alias database") 
+    Puppet.debug "show device-alias database \n  #{out} "
+    lines = out.split("\n")
+    lines.shift ; lines.pop
+    lines.each do |l|
+      if l =~ /device-alias\s*name\s*(\S*)\s*(\S*)\s*(\S*)/
+        m_alias = { :name => $1, :member => $3 }        
+        malias[m_alias[:name]] = m_alias
+      end
+    end
+    malias
+  end 
 
   def update_alias(id, is = {}, should = {})  
     member=should[:member]
     if should[:ensure] == :absent
       Puppet.debug "Removing #{id} from device alias"
-        execute("conf t")
-        execute("device-alias database")
-        execute("no device-alias name #{id} ")   
-        execute("device-alias commit")
-        execute("exit")
-        execute("exit")
+      execute("conf t")
+      execute("device-alias database")
+      execute("no device-alias name #{id} ")   
+      execute("device-alias commit")
+      execute("exit")
+      execute("exit")
       return
-      end
-        Puppet.debug "Creating Alias id #{id} member #{member} "
-        execute("conf t")
-        execute("device-alias database")
-        Puppet.debug "id #{id} member #{member}  "
-        out = execute("device-alias name  #{id} pwwn #{member}")
-       if ( out =~ /% Invalid/ )
-         raise "The command input #{memberval} is invalid"
-        end 
-        if (out =~ /already present/)
-            raise "Another device-alias already present with the same pwwn"
-        end
-        execute("device-alias commit") 
-        execute("exit")
-        execute("exit")
+    end
+
+    Puppet.debug "Creating Alias id #{id} member #{member} "
+    execute("conf t")
+    execute("device-alias database")
+    Puppet.debug "id #{id} member #{member}  "
+    out = execute("device-alias name  #{id} pwwn #{member}")
+    if ( out =~ /% Invalid/ )
+      raise "The command input #{memberval} is invalid"
+    end 
+    if (out =~ /already present/)
+      raise "Another device-alias already present with the same pwwn"
+    end
+    execute("device-alias commit") 
+    execute("exit")
+    execute("exit")
   end 
  
   def update_vlan(id, is = {}, should = {})
@@ -226,7 +228,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     vsanid = should[:vsanid]
     mem = member.split(",")
     if should[:ensure] == :absent
-      Puppet.info "Removing zone #{id} from device"
+      Puppet.info "Zone #{id} is being destroyed."
       execute("conf t")
       Puppet.debug "conf t"
       out = execute("zone name #{id} vsan #{vsanid}")
@@ -259,7 +261,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
       execute("exit")
       return
     end
-	Puppet.info "Creating zone #{id} on device"
+	Puppet.info "Zone #{id} is being created."
     # We're creating or updating an entry
     execute("conf t")
     Puppet.debug "conf t"
