@@ -11,11 +11,14 @@ Puppet::Type.newtype(:zone) do
 
     newparam(:name) do
       desc "Zone name."
-
-      isnamevar
-      newvalues(/^\S+/)
       validate do |value|
         if value.strip.length == 0
+            raise ArgumentError, "The zone name is invalid."
+        end
+        if value =~/^\d/
+            raise ArgumentError, "The zone name is invalid, Zone name cannot start with a digit" 
+        end
+        if value !~ /^\S{1,64}$/
             raise ArgumentError, "The zone name is invalid."
         end
       end
@@ -28,7 +31,7 @@ Puppet::Type.newtype(:zone) do
         if value.strip.length == 0
             raise ArgumentError, "The VSAN Id is invalid."
         end
-        if value =~ /0/
+        if value.to_i == 0
           raise ArgumentError, "The VSAN Id 0 is invalid."
         end
         if value !~ /^\d+/
@@ -40,7 +43,6 @@ Puppet::Type.newtype(:zone) do
     
     newproperty(:membertype) do
       desc "member type"
-
       newvalues(:'device-alias', :fcalias, :fcid, :fwwn, :pwwn)
     end
 

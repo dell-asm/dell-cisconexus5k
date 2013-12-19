@@ -207,25 +207,34 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
       Puppet.info "Removing VLAN #{id} from the device"
       execute("conf t")
       out = execute("no vlan #{id}")
+      if out =~ /Invalid/
+        raise "The VLAN id value/range is not valid"
+      end
       execute("exit")
       return
     end
 
     # We're creating or updating an entry
     execute("conf t")
-    execute("vlan #{id}")
+    out = execute("vlan #{id}")
+    if out =~ /Invalid/
+        raise "The VLAN id value/range is not valid"
+    end
     [is.keys, should.keys].flatten.uniq.each do |property|
       Puppet.debug("trying property: #{property}: #{should[property]}")
       next if property != :vlanname
       execute("name #{should[property]}")
       Puppet.info "Created VLAN #{id}"
     end
-    execute("exit")
+    out = execute("exit")
+    if out =~/ERROR:\s*(.*)/
+        Puppet.info "#{$1}"
+    end
+    
     execute("exit")
   end
 
-  def update_zone(id, is = {}, should = {},membertype = {}, member = {})
-    vsanid = should[:vsanid]
+  def update_zone(id, is = {}, should = {}, vsanid = {}, membertype = {}, member = {})
     mem = member.split(",")
     if should[:ensure] == :absent
       Puppet.info "Zone #{id} is being destroyed."
@@ -233,6 +242,9 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
       Puppet.debug "conf t"
       out = execute("zone name #{id} vsan #{vsanid}")
       Puppet.debug "zone name #{id} vsan #{vsanid}"
+      if ( out =~/Illegal/ )
+        raise "The zone name #{id} is not valid on the switch" 
+      end
       if ( out =~ /% Invalid/ )
         raise "The VSAN Id #{vsanid} is not valid on the switch"
       end
@@ -267,13 +279,15 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     Puppet.debug "conf t"
     out = execute("zone name #{id} vsan #{vsanid}")
     Puppet.debug "zone name #{id} vsan #{vsanid}"
+    if ( out =~/Illegal/ )
+      raise "The zone name #{id} is not valid on the switch" 
+    end
     if ( out =~ /% Invalid/ )
       raise "The VSAN Id #{vsanid} is not valid on the switch"
     end
     if ( out =~ /not configured/ )
-      raise "Invalid vsam id"  
+      raise "The VSAN Id #{vsanid} is not valid on the switch"  
     end
-      
     mem.each do |memberval|
       out =  execute("member #{membertype} #{memberval}")
       Puppet.debug "member #{membertype} #{memberval}"

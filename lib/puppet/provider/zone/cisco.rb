@@ -11,7 +11,7 @@ Puppet::Type.type(:zone).provide :cisconexus5k , :parent => Puppet::Provider::Ci
     device.command do |dev|
       zones = dev.parse_zones || {}
     end
-    zones[id]
+     zones[id]
   end
 
   def initialize(device, *args)
@@ -21,7 +21,7 @@ Puppet::Type.type(:zone).provide :cisconexus5k , :parent => Puppet::Provider::Ci
   # Clear out the cached values.
   def flush
     device.command do |dev|
-      dev.update_zone(resource[:name], former_properties, properties, resource[:membertype], resource[:member])
+      dev.update_zone(resource[:name], former_properties, properties, resource[:vsanid], resource[:membertype], resource[:member])
     end
     super
   end
