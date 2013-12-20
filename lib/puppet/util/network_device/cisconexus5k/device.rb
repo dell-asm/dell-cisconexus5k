@@ -233,6 +233,219 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     
     execute("exit")
   end
+  
+  def update_interface(id, is = {}, should = {},interfaceid = {},nativevlanid={},istrunk = {},encapsulationtype={},isnative={},deletenativevlaninformation={},unconfiguretrunkmode={},
+shutdownswitchinterface={},interfaceoperation={})
+    responseinterface = execute("show interface #{interfaceid}")
+    if ( responseinterface =~ /Invalid/ )
+      raise "Interface #{interfaceid} does not exist on the switch"
+    end
+    if should[:ensure] == :absent || interfaceoperation == "remove"
+      Puppet.info "Removing interface #{interfaceid} from vlan #{id}"
+      execute("conf t")
+      execute("interface #{interfaceid}")
+      if istrunk == "true"
+        responsetrunk = execute("show interface #{interfaceid} trunk")
+        if ( responsetrunk =~ /Invalid/ )
+          Puppet.info("Trunking is not configured for interface #{interfaceid}.")
+          return
+        end
+        interfacestatus = gettrunkinterfacestatus(responsetrunk)
+        if ( interfacestatus != "trunking" )
+          Puppet.info "Interface #{interfaceid} is in access mode"
+          return
+        end
+        Puppet.info "Interface #{interfaceid} is in trunk mode"
+        if deletenativevlaninformation == "true"
+         Puppet.info "Deleting native vlan information"
+          execute("no switchport trunk native vlan #{nativevlanid}")
+        end
+        execute("switchport trunk allowed vlan remove #{id}")
+        if unconfiguretrunkmode == "true"
+          Puppet.info "Unconfiguring trunk mode"
+          execute("no switchport mode trunk")
+        end
+        if shutdownswitchinterface == "true" && unconfiguretrunkmode == "false"
+          Puppet.info "Shuting down the interface #{interfaceid}"
+          execute("shutdown")
+        end
+      else
+          Puppet.info "Interface #{interfaceid} is in access mode"
+          execute("no switchport access vlan #{id}")
+          execute("no switchport mode access")
+          execute("shutdown")
+      end
+      execute("exit")
+      execute("exit")
+      return
+    end
+
+    # We're creating or updating an entry
+    execute("conf t")
+    interfaceid = should[:interface]
+    encapsulationtype = should[:interfaceencapsulationtype]
+    nativevlanid = should[:nativevlanid]
+    execute("interface #{interfaceid}")
+    [is.keys, should.keys].flatten.uniq.each do |property|
+      Puppet.debug("trying property: #{property}: #{should[property]}")
+      next if property != :istrunkforinterface
+        if should[:istrunkforinterface] == "true"
+          Puppet.debug("Check whether the given interface is already configured as trunk interface or not")
+          responsetrunk = execute("show interface #{interfaceid} trunk")
+          if ( responsetrunk =~ /Invalid/ )
+            Puppet.info("Trunking is not configured for interface #{interfaceid}. Need to configure trunking on this interface.")
+            return
+          end
+          Puppet.info("get trunk interface status for #{interfaceid}")
+          interfacestatus = gettrunkinterfacestatus(responsetrunk)
+          Puppet.info("getencapsulationtype for interface #{interfaceid}")
+          updateencapsulationtype = getencapsulationtype(interfaceid,encapsulationtype)
+          if ( interfacestatus != "trunking" )
+            execute("switchport")
+            if ( updateencapsulationtype != "" )
+              execute("switchport trunk encapsulation #{updateencapsulationtype}")
+            end
+            execute("switchport mode trunk")
+          end
+          removeallassociatedvlans = should[:removeallassociatedvlans]
+          if removeallassociatedvlans == "true"
+            Puppet.info("removing all associated vlans")
+            execute("switchport trunk allowed vlan none")
+          end
+          isnative = should[:isnative]
+          if isnative == "true"
+            Puppet.info("Configuring the switch interface with a native vlan")
+            execute("switchport trunk native vlan #{nativevlanid}")
+          end
+          execute("switchport trunk allowed vlan add #{id}")
+          execute("no shutdown")
+        else
+          Puppet.info "Interface #{interfaceid} is configuring as access mode"
+          execute("switchport")
+          execute("switchport mode access")
+          execute("switchport access vlan #{id}")
+          execute("no shutdown")
+        end
+    end
+    execute("exit")
+    execute("exit")
+    return
+  end
+
+  def getencapsulationtype(interfaceid,encapsulationtype)
+    updateencapsulationtype = ""
+    encapsulationtypelist = ""
+    if encapsulationtype != ""
+      responsecapability = execute("show interface #{interfaceid} Capabilities")
+      if responsecapability =~ /Trunk encap. type:\s+(\S+)/
+        encapsulationtypelist = $1
+      end
+      if ( encapsulationtypelist =~ /,/ )
+        Puppet.info("Multiple encapsulation type")
+        updateencapsulationtype = encapsulationtype
+      else
+        updateencapsulationtype = encapsulationtype
+        if encapsulationtype == "dot1q"
+          updateencapsulationtype = "802.1Q"
+        end
+        if updateencapsulationtype == encapsulationtypelist
+          updateencapsulationtype = ""
+        else
+          updateencapsulationtype = encapsulationtype
+        end
+      end
+    end
+    return updateencapsulationtype
+  end
+
+  def gettrunkinterfacestatus(response)
+    response = response.gsub("\n",'')
+    if response =~ /--.+\s+\s+(tr\S+)\s+/
+      trunk = $1
+    end
+    if ( trunk =~ /trnk-bndl/ )
+      trunk = "trunking"
+    end
+    return trunk
+  end
+
+  def update_portchannel(id, is = {}, should = {}, portchannel = {}, istrunkforportchannel = {},portchanneloperation = {})
+    if portchannel !~ /\d/
+      Puppet.info("Port channel #{portchannel} should be numeric value")
+      return
+    end
+    pchannel = "po#{portchannel}"
+    responsepchannel = execute("show interface #{pchannel}")
+    if ( responsepchannel =~ /Invalid/ )
+      raise "Port channel #{portchannel} does not exist on the switch"
+      return
+    end
+    if should[:ensure] == :absent || portchanneloperation == "remove"
+      Puppet.info "Removing port channel #{portchannel} from device vlan #{id}"
+      execute("conf t")
+      execute("interface port-channel #{portchannel}")
+      if (istrunkforportchannel == "true")
+        execute("switchport trunk allowed vlan remove #{id}")
+      end
+      execute("no switchport access vlan #{id}")
+      execute("exit")
+      return
+    end
+
+    # We're creating or updating an entry
+    execute("conf t")
+    portchannel = should[:portchannel]
+    istrunkforportchannel = should[:istrunkforportchannel]
+    execute("interface port-channel #{portchannel}")
+    execute("switchport")
+    if (istrunkforportchannel == "true")
+      Puppet.info "Portchannel #{portchannel} is configuring as trunk mode"
+      portchannelencapsulationtype = should[:portchannelencapsulationtype]
+      addmembertotrunkvlan(id,portchannel,portchannelencapsulationtype)
+    else
+      Puppet.info "Portchannel #{portchannel} is configuring as access mode"
+      execute("switchport mode access")
+      execute("switcport access vlan #{id}")
+    end
+    execute("no shutdown")
+    execute("exit")
+    execute("exit")
+    return
+  end
+
+  def addmembertotrunkvlan(vlanid,portchannelid,portchannelencapsulationtype)
+    portchannel = "po#{portchannelid}"
+    Puppet.info("getencapsulationtype for portchannel #{portchannelid}")
+    updateencapsulationtype = getencapsulationtype(portchannel,portchannelencapsulationtype)
+    responseportchannel = execute("show interface #{portchannel} trunk")
+    if ( responseportchannel =~ /Invalid/ )
+      Puppet.info("Trunking is not configured for port channel #{portchannel}. Need to configure trunking on this interface.")
+      return
+    end
+    Puppet.info("get trunk port channel status for #{portchannel}")
+    interfacestatus = gettrunkinterfacestatus(responseportchannel)
+    if ( interfacestatus != "trunking" )
+      execute("switchport")
+      if ( updateencapsulationtype != "" )
+        execute("switchport trunk encapsulation #{updateencapsulationtype}")
+      end
+    execute("switchport mode trunk")
+    end
+    notaddedtoanyvlan = "false"
+    out = execute("show interface #{portchannel} switchport")
+    if out =~ /Trunking VLANs Allowed:\s(\S+)\s/
+      trunkportvlanid = $1
+    end
+    if (trunkportvlanid.length == 0 || trunkportvlanid == "NONE")
+      notaddedtoanyvlan = "true"
+    end
+    if notaddedtoanyvlan == "true"
+      execute("switchport trunk allowed vlan #{vlanid}")
+    else
+      execute("switchport trunk allowed vlan add #{vlanid}")
+    end
+    return
+  end
 
   def update_zone(id, is = {}, should = {}, vsanid = {}, membertype = {}, member = {})
     mem = member.split(",")
