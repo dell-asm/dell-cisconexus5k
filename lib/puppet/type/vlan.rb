@@ -54,7 +54,7 @@ Puppet::Type.newtype(:vlan) do
 
       validate do |value|
         if value.strip.length == 0
-          raise ArgumentError, "The Interface is invalid."
+          raise ArgumentError, "The Interface value should not be blank."
         end
       end
     end
