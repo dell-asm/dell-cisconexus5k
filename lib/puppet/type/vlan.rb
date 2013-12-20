@@ -162,10 +162,10 @@ Puppet::Type.newtype(:vlan) do
 
       validate do |value|
         if value !~ /^\d+/
-          raise ArgumentError, "The Port channelId should be positive integer."
+          raise ArgumentError, "The Port channel Id should be positive integer."
         end
         if value.to_i == 0
-          raise ArgumentError, "The Port channelId 0 is invalid."
+          raise ArgumentError, "The Port channel Id 0 is invalid."
         end
       end
     end
