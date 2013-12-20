@@ -262,11 +262,11 @@ shutdownswitchinterface={},interfaceoperation={})
         end
         execute("switchport trunk allowed vlan remove #{id}")
         if unconfiguretrunkmode == "true"
-          Puppet.info "Unconfiguring trunk mode"
+          Puppet.info "Un configuring trunk mode"
           execute("no switchport mode trunk")
         end
         if shutdownswitchinterface == "true" && unconfiguretrunkmode == "false"
-          Puppet.info "Shuting down the interface #{interfaceid}"
+          Puppet.info "Shutting down the interface #{interfaceid}"
           execute("shutdown")
         end
       else
@@ -296,9 +296,9 @@ shutdownswitchinterface={},interfaceoperation={})
             Puppet.info("Trunking is not configured for interface #{interfaceid}. Need to configure trunking on this interface.")
             return
           end
-          Puppet.info("get trunk interface status for #{interfaceid}")
+          Puppet.info("Get trunk interface status for #{interfaceid}")
           interfacestatus = gettrunkinterfacestatus(responsetrunk)
-          Puppet.info("getencapsulationtype for interface #{interfaceid}")
+          Puppet.info("Get encapsulationtype for interface #{interfaceid}")
           updateencapsulationtype = getencapsulationtype(interfaceid,encapsulationtype)
           if ( interfacestatus != "trunking" )
             execute("switchport")
@@ -309,7 +309,7 @@ shutdownswitchinterface={},interfaceoperation={})
           end
           removeallassociatedvlans = should[:removeallassociatedvlans]
           if removeallassociatedvlans == "true"
-            Puppet.info("removing all associated vlans")
+            Puppet.info("Removing all associated vlans")
             execute("switchport trunk allowed vlan none")
           end
           isnative = should[:isnative]
@@ -422,7 +422,7 @@ shutdownswitchinterface={},interfaceoperation={})
       Puppet.info("Trunking is not configured for port channel #{portchannel}. Need to configure trunking on this interface.")
       return
     end
-    Puppet.info("get trunk port channel status for #{portchannel}")
+    Puppet.info("Get trunk port channel status for #{portchannel}")
     interfacestatus = gettrunkinterfacestatus(responseportchannel)
     if ( interfacestatus != "trunking" )
       execute("switchport")
