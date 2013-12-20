@@ -15,8 +15,8 @@ Puppet::Type.newtype(:vlan) do
         if value !~ /^\d+/
           raise ArgumentError, "The VLAN Id should be positive integer."
         end
-        if value.to_i <= 1 || value.to_i >= 4094
-          raise ArgumentError, "The VLAN Id should be in the range 2-4094."
+        if value.to_i <= 1 || value.to_i >= 4093
+          raise ArgumentError, "The VLAN Id should be in the range 1-4093."
         end
         #if value.to_i == 0
         #  raise ArgumentError, "The VLAN Id 0 is invalid."
