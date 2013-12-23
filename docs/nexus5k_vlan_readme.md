@@ -2,11 +2,11 @@
 # Access Mechanism
 #-------------------------------------------------------------------------------
 
-The Cisco Nexus 5000 module uses ssh via the net-ssh ruby gem to interact with 
+The Cisco Nexus 5000 module uses SSH via the net-ssh ruby gem to interact with 
 the Nexus switch.
 
 #-------------------------------------------------------------------------------
-# Functionality supported
+# Functionality Supported
 #-------------------------------------------------------------------------------
 
 - Create VLANs
@@ -20,69 +20,78 @@ the Nexus switch.
 # Description
 #-------------------------------------------------------------------------------
 
-The VLAN type/provider supports functionality to create and delete VLANs on the
-Nexus 5000 switch. 
+The VLAN type/provider supports the functionality to create and delete the VLANs 
+on the Nexus 5000 switch.
 
 #-------------------------------------------------------------------------------
 # Summary of Properties
 #-------------------------------------------------------------------------------
 
-VLAN properties
+VLAN properties:
 
-    1. vlanname - Name of the VLAN to be created.
+    1. vlanname - This parameter defines the name of the VLAN to be created.
 
-Interface properties
+Interface properties:
 
-    1. interface - Interface to be added to the VLAN.
+    1. interface - This parameter defines the interface to be added to the VLAN.
 
-    2. istrunkforinterface - Decides wether mode is access or trunk. Possible 
-                             values are true or false. Default - true
+    2. istrunkforinterface - This parameter decides if the mode is access or 
+                             trunk. The valid values are true or false. The 
+                             default value is "true".
 
-    3. interfaceencapsulationtype - Sets the encapsulation type for the 
-                                    interface. Default - dot1q
+    3. interfaceencapsulationtype - This parameter sets the encapsulation type 
+                                    for the interface. The default value is "dot1q".
 
-    4. isnative - Decides wether interface will be added to the native VLAN or 
-                  not. Possible values are true or false. Default - true
+    4. isnative - This parameter decides whether or not the interface will be 
+                  added to the native VLAN. The valid values are true or false. 
+                  The default value is "true".
 
-    5. deletenativevlaninformation - Decides if native VLAN is to be deleted
-                                     from the interface. Possible values are
-                                     true or false. Default - true
+    5. deletenativevlaninformation - This parameter decides whether or not the 
+                                     native VLAN is to be deleted from the interface. 
+                                     The possible values are true or false. The 
+                                     default value is "true".
 
-    6. unconfiguretrunkmode - Unconfigured trunk mode on the interface. Possible
-                              values are true or false. Default - true
+    6. unconfiguretrunkmode - This parameter defines the un-configured trunk 
+                              mode on the interface. The valid values are true
+                              or false. The default value is "true".
 
-    7. shutdownswitchinterface - Shutdown interface or not. Possible values
-                                 are true or false. Default - true
+    7. shutdownswitchinterface - This parameter defines whether or not to 
+                                 shutdown the interface. The possible values 
+                                 are true or false. The default value is "true".
 
-    8. interfaceoperation - Operation to be performed for the interface.
-                            Possible values are add or remove.
+    8. interfaceoperation - This parameter defines the operation to be 
+                            performed for the interface. The possible values 
+                            are "add" or "remove".
 
-    9. nativevlanid - User specified native VLAN Id to be set for the interface.
-                      Default - 1
+    9. nativevlanid - This parameter defines the user specified native VLAN Id
+                      to be set for the interface. The default value is "1".
 
-    10. removeallassociatedvlans - Removes all associated VLANs. Possible
-                                   values are true or false. Default - true.
+    10. removeallassociatedvlans - This parameter removes all the associated 
+                                   VLANs. The possible values are true or false.
+                                   The default value is "true".
 
-Portchannel properties
+Portchannel properties:
 
+    1. portchannel - This parameter defines the Portchannel to be added.
 
-    1. portchannel - Portchannel to be added.
+    2. istrunkforportchannel -  This parameter decides if the mode is access or 
+                                trunk. The possible values are true or false. 
+                                The default vause is "true".
 
-    2. istrunkforportchannel -  Decides wether mode is access or trunk. Possible 
-                                values are true or false. Default - true
+    3. portchannelencapsulationtype -  This parameter sets the encapsulation 
+                                       type for the portchannel. The default
+                                       value is "dot1q".
 
-    3. portchannelencapsulationtype -  Sets the encapsulation type for the 
-                                        portchannel. Default - dot1q
-
-    4. portchanneloperation - Operation to be performed for the portchannel.
-                              Possible values are add or remove.
+    4. portchanneloperation - This parameter defines the operation to be 
+                              performed on the portchannel. The possible values 
+                              are "add" or "remove".
 
 #-------------------------------------------------------------------------------
 # Usage
 #-------------------------------------------------------------------------------
 
-The Nexus 5000 module can be used by calling the vlan type from site.pp as
-shown in the example below
+The Nexus 5000 module can be used by calling the VLAN type from site.pp, as 
+shown in the example below:
 
     vlan {
       "100":

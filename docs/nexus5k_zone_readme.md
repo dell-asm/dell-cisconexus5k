@@ -2,11 +2,11 @@
 # Access Mechanism
 #-------------------------------------------------------------------------------
 
-The Cisco Nexus 5000 module uses ssh via the net-ssh ruby gem to interact with 
-the Nexus switch.
+The Cisco Nexus 5000 module uses the SSH via the net-ssh ruby gem to interact 
+with the Nexus switch.
 
 #-------------------------------------------------------------------------------
-# Functionality supported
+# Functionality Supported
 #-------------------------------------------------------------------------------
 
 - Create zones
@@ -18,26 +18,28 @@ the Nexus switch.
 # Description
 #-------------------------------------------------------------------------------
 
-The VLAN type/provider supports functionality to create and delete zones on the
+The VLAN type/provider supports functionality to create and delete zones on the 
 Nexus 5000 switch. 
 
 #-------------------------------------------------------------------------------
 # Summary of Properties
 #-------------------------------------------------------------------------------
 
-    1. member - Comma seperated list of members to the added to the zone.
+    1. member - This parameter defines the comma seperated list of members to be 
+                added to the zone.
 
-    2. membertype - Denotes the member type to be added to the zone. Possible
-                    values are device-alias, fcalias, fcid, fwwn and pwwn.
+    2. membertype - This parameter denotes the member type to be added to the 
+                    zone. The valid values are: device-alias, fcalias, fcid, 
+                    fwwn and pwwn.
 
-    3. vsanid - VSAN Id for the zone.
+    3. vsanid - This parameter defines the VSAN Id for the zone.
     
 #-------------------------------------------------------------------------------
 # Usage
 #-------------------------------------------------------------------------------
 
-The Nexus 5000 module can be used by calling the zone type from site.pp as
-shown in the example below
+The Nexus 5000 module can be used by calling the zone type from the site.pp, as 
+shown in the example below:
 
   zone {
     "Zone_Demo":
