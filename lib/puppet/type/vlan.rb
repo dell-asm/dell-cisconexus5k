@@ -13,10 +13,10 @@ Puppet::Type.newtype(:vlan) do
       desc "The numeric VLAN ID."
       validate do |value|
         if value !~ /^\d+/
-          raise ArgumentError, "The VLAN Id should be positive integer."
+          raise ArgumentError, "The value of the VLAN Id must be a positive integer."
         end
         if value.to_i <= 1 || value.to_i >= 4094
-          raise ArgumentError, "The VLAN Id should be in the range 1-4093."
+          raise ArgumentError, "A valid VLAN Id value must not be less than 1,  and must not exceed 4093."
         end
         #if value.to_i == 0
         #  raise ArgumentError, "The VLAN Id 0 is invalid."
@@ -28,7 +28,7 @@ Puppet::Type.newtype(:vlan) do
       desc "VLAN name."
       validate do |value|
         if value.strip.length == 0
-          raise ArgumentError, "VLAN name property cannot be empty."
+          raise ArgumentError, "The VLAN name must contain a value. It cannot be null."
         end
       end
     end
@@ -54,7 +54,7 @@ Puppet::Type.newtype(:vlan) do
 
       validate do |value|
         if value.strip.length == 0
-          raise ArgumentError, "The Interface value should not be blank."
+          raise ArgumentError, "The Interface property must contain a value. It cannot be null."
         end
       end
     end
@@ -101,10 +101,10 @@ Puppet::Type.newtype(:vlan) do
 
       validate do |value|
         if value !~ /^\d+/
-          raise ArgumentError, "The native VLAN Id should be positive integer."
+          raise ArgumentError, "The value of the native VLAN Id must be a positive integer."
         end
         if value.to_i == 0
-          raise ArgumentError, "The native VLAN Id 0 is invalid."
+          raise ArgumentError, "The entered native VLAN Id “0” is invalid."
         end
       end
     end
@@ -162,10 +162,10 @@ Puppet::Type.newtype(:vlan) do
 
       validate do |value|
         if value !~ /^\d+/
-          raise ArgumentError, "The Port channel Id should be positive integer."
+          raise ArgumentError, "The value of the Port Channel Id must be a positive integer."
         end
         if value.to_i == 0
-          raise ArgumentError, "The Port channel Id 0 is invalid."
+          raise ArgumentError, "The entered value of the Post Channel Id “0” is invalid."
         end
       end
     end
