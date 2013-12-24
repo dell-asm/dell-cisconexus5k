@@ -15,7 +15,7 @@ Puppet::Type.newtype(:zoneset) do
     isnamevar
     validate do |value|
         unless value =~ /^\w+$/
-            raise ArgumentError, "%s is not a valid zoneset name." % value
+            raise ArgumentError, "\'%s\' is not a valid zoneset name." % value
         end
     end
   end
@@ -27,7 +27,7 @@ Puppet::Type.newtype(:zoneset) do
     #defaultto "1g"
     validate do |value|
       unless value =~ /^\d+$/
-         raise ArgumentError, "%s is not a valid vsan id." % value
+         raise ArgumentError, "\'%s\' is not a valid vsan id." % value
       end
     end
   end
@@ -36,7 +36,7 @@ Puppet::Type.newtype(:zoneset) do
     desc "member zones"
     validate do |value|
       unless value =~ /^((\w+)(,*))*$/
-         raise ArgumentError, "%s is not a valid format." % value
+         raise ArgumentError, "\'%s\' is not a valid format." % value
       end
     end
   end
@@ -47,7 +47,7 @@ Puppet::Type.newtype(:zoneset) do
    # newvalues(:'true', :'false')
     validate do |value|
       unless (value =~ /^true$/ || value =~ /^false$/)
-         raise ArgumentError, "%s is not a valid value, enter \"true\" or \"false\"." % value
+         raise ArgumentError, "\'%s\' is not a valid value, enter \"true\" or \"false\"." % value
       end
     end
   end
@@ -58,7 +58,7 @@ Puppet::Type.newtype(:zoneset) do
 #    newvalues(:'true', :'false')
     validate do |value|
        unless (value =~ /^true$/ || value =~ /^false$/)
-          raise ArgumentError, "%s is not a valid value, enter \"true\" or \"false\"." % value
+          raise ArgumentError, "\'%s\' is not a valid value, enter \"true\" or \"false\"." % value
        end
      end
   end

@@ -399,16 +399,16 @@ shutdownswitchinterface={},interfaceoperation={})
     # Delete Zoneset - start
     if should[:ensure] == :absent
       existingzonesets.each do |key, value|
-          Puppet.debug("System Zoneset key: #{key} name: #{value[:name]} vsan: #{value[:vsanid]}, Required Zoneset key: name: #{id} vsan: #{vsanid}")
+          Puppet.debug("System Zoneset key: #{key} name: #{value[:name]} VSAN: #{value[:vsanid]}, Required Zoneset key: name: #{id} VSAN: #{vsanid}")
           if value[:name] == id && value[:vsanid] == vsanid
             iskeymatched = true
             #matching zoneset found so remove it.
             
-            Puppet.info "Removing zoneset: #{id} vsan #{vsanid} from device."
+            Puppet.info "Removing zoneset: #{id} VSAN #{vsanid} from device."
             execute("conf t")
             #Deactivate the zoneset if "active = false" property is explicitely mentioned in inputs.
             if (active != nil) && (active == "false")
-                Puppet.debug("De-activating Zoneset #{id} for vSAN #{vsanid}")
+                Puppet.debug("De-activating Zoneset #{id} for VSAN #{vsanid}")
                 out = execute("no zoneset activate name #{id} vsan #{vsanid}")
                 Puppet.debug("#{out}")
             end
@@ -431,25 +431,25 @@ shutdownswitchinterface={},interfaceoperation={})
          end
        end
        if iskeymatched == false
-            Puppet.info "Zoneset: #{id} vsan #{vsanid} not found on device."
+            Puppet.info "Zoneset: #{id} VSAN #{vsanid} not found on device."
        end
        return
     end
     # Delete Zoneset - end
   
     # Create or update zoneset - start
-    Puppet.info "Add/Updating a zoneset: #{id} vsan #{vsanid} on device"
+    Puppet.info "Add/Updating a zoneset: #{id} VSAN #{vsanid} on device"
     execute("conf t")
     iskeymatched = false #reset the flag.
 
     #If zoneset already exists then update it. 
     existingzonesets.each do |key, value|
-        Puppet.debug("System Zoneset key: #{key} name: #{value[:name]} vsan: #{value[:vsanid]} members: #{value[:member]}, Required zoneset key: name: #{id} vsan: #{vsanid} member: #{member}")
+        Puppet.debug("System Zoneset key: #{key} name: #{value[:name]} VSAN: #{value[:vsanid]} members: #{value[:member]}, Required zoneset key: name: #{id} VSAN: #{vsanid} member: #{member}")
         if value[:name] == id && value[:vsanid] == vsanid
             iskeymatched = true
             #matching zoneset found so update it.
             
-            Puppet.info ("Updating a zoneset: #{id} with vsan #{vsanid} on device")
+            Puppet.info ("Updating a zoneset: #{id} with VSAN #{vsanid} on device")
              mem = {}
              if (member !=nil)
                 mem = member.split(",")
@@ -482,7 +482,7 @@ shutdownswitchinterface={},interfaceoperation={})
   
     #If zoneset doesnot exists, then create a new one.
     if iskeymatched == false
-        Puppet.info "Zoneset: #{id} vsan #{vsanid} not found on device, creating a new zoneset."
+        Puppet.info "Zoneset: #{id} VSAN #{vsanid} not found on device, creating a new zoneset."
         out = execute("zoneset name #{id} vsan #{vsanid}")
         Puppet.debug("#{out}")
         mem = {}
@@ -499,7 +499,7 @@ shutdownswitchinterface={},interfaceoperation={})
 
     # Activate zoneset - start
     if (active != nil) && (active == "true")
-        Puppet.info("Activating zoneset #{id} on vsan #{vsanid}.")
+        Puppet.info("Activating zoneset #{id} on VSAN #{vsanid}.")
         existingactive = ""
         iskeymatched = false
         activezonesets = get_active_zonesets
@@ -508,32 +508,32 @@ shutdownswitchinterface={},interfaceoperation={})
             if value[:vsanid] == vsanid
                 iskeymatched = true
                 existingactive = value[:name]
-                Puppet.info("Found an active zoneset #{existingactive} corrosponding to vSAN #{vsanid}")
+                Puppet.info("Found an active zoneset #{existingactive} corresponding to VSAN #{vsanid}")
                 if id != existingactive && force == "true"
-                    Puppet.info("De-activating Zoneset #{existingactive} for vSAN #{vsanid}")
+                    Puppet.info("De-activating Zoneset #{existingactive} for VSAN #{vsanid}")
                     out = execute("no zoneset activate name #{existingactive} vsan #{vsanid}")
                     Puppet.debug("#{out}")
-                    Puppet.info("Activating Zoneset #{id} for vSAN #{vsanid}")
+                    Puppet.info("Activating Zoneset #{id} for VSAN #{vsanid}")
                     out = execute("zoneset activate name #{id} vsan #{vsanid}")
                     Puppet.debug("#{out}")
                 elsif id == existingactive
-                    Puppet.info("Re-activating Zoneset #{id} on  vSAN #{vsanid}")  
+                    Puppet.info("Re-activating Zoneset #{id} on  VSAN #{vsanid}")  
                     out = execute("no zoneset activate name #{id} vsan #{vsanid}")
                     Puppet.debug("#{out}")
                     out = execute("zoneset activate name #{id} vsan #{vsanid}")
                     Puppet.debug("#{out}")
                 elsif force != "true"
-                   Puppet.info("Another zoneset already active, Use property \"force => true\" to activate zoneset #{id} on vSAN #{vsanid}")
+                   Puppet.info("Another zoneset already active, Use property \"force => true\" to activate zoneset #{id} on VSAN #{vsanid}")
                 end
             end
         end    
         if iskeymatched == false
-            Puppet.debug("No active zoneset found for vSAN #{vsanid}, Activating Zoneset #{id}")
+            Puppet.debug("No active zoneset found for VSAN #{vsanid}, Activating Zoneset #{id}")
             out = execute("zoneset activate name #{id} vsan #{vsanid}")
             Puppet.debug("#{out}")
         end
     elsif (active != nil) && (active == "false")
-       Puppet.info("De-activating Zoneset #{id} for vSAN #{vsanid}")
+       Puppet.info("De-activating Zoneset #{id} for VSAN #{vsanid}")
        out = execute("no zoneset activate name #{id} vsan #{vsanid}")
        Puppet.debug("#{out}")
     end 
