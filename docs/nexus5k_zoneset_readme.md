@@ -2,8 +2,8 @@
 # Access Mechanism
 #-------------------------------------------------------------------------------
 
-The Cisco Nexus 5000 module uses SSH via the net-ssh ruby gem to interact 
-with the Nexus switch.
+The Cisco Nexus 5000 module uses SSH via the net-ssh ruby gem to interact with 
+the Nexus switch.
 
 #-------------------------------------------------------------------------------
 # Functionality Supported
@@ -20,28 +20,28 @@ with the Nexus switch.
 # Description
 #-------------------------------------------------------------------------------
 
-The zoneset type/provider supports functionality to create and delete zonesets 
-on the Nexus 5000 switch. 
+The zoneset type/provider supports the functionality to create and delete 
+zonesets on the Nexus 5000 switch. 
 
 #-------------------------------------------------------------------------------
 # Summary of Properties
 #-------------------------------------------------------------------------------
 
-    1. member - This parameter (Optional) defines the comma separated list of 
-				        member zones for the zoneset. If this parameter is omitted then 
-                the existing zoneset's members will not be affected.
+    1. member - (Optional) This parameter defines the comma separated list of 
+                member zones for the zoneset. If this parameter is omitted then 
+                the existing zoneset members will not be affected.
     
-    2. vsanid - This parameter (Mandatory) defines the VSAN Id for the zoneset.
+    2. vsanid - (Mandatory) This parameter defines the VSAN Id for the zoneset.
     
-	  3. active - This parameter (Optional) defines whether to activate or deactivate 
-                the given zoneset on a given VSAN. The valid values are "true" 
-                or "false". If this parameter is omitted then zoneset activation 
-                state will not be affected.
+	  3. active - (Optional) This parameter defines whether to activate or 
+                deactivate the given zoneset on a given VSAN. The valid values 
+                are "true" or "false". If this parameter is omitted then the 
+                zoneset state is not be affected.
     
-	4. force - 	  This parameter (Optional) defines whether or not to forcefully
-				        activate the given zoneset if another zoneset is already active 
-                on given VSAN. The valid values are "true" or "false". This 
-                parameter should be used with the "active" parameter.
+	4. force - (Optional)	This parameter defines whether or not to forcefully 
+             activate the given zoneset, if another zoneset is already active 
+             on the given VSAN. The valid values are "true" or "false". This 
+             parameter must be used with the "active" parameter.
     
 #-------------------------------------------------------------------------------
 # Usage
@@ -65,7 +65,7 @@ Usage:- Add zone to zone set
         ensure => "present",
     }
 
-Usage:- Remove zone from zoneset (will remove Zone_Demo2 and Zone_Demo3)
+Usage:- Remove zone from zoneset (removes the Zone_Demo2 and Zone_Demo3)
     zoneset {
       "Zoneset_Demo":
         member => "Zone_Demo1",
@@ -109,7 +109,7 @@ Example:- Create, add member zones and force active
         force => "true",
     }
 
-Example:- deactivate zoneset and delete it
+Example:- deactivate zoneset and delete zoneset
     zoneset {
       "Zoneset_Demo":
         vsanid => "999",
