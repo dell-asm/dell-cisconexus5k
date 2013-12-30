@@ -64,7 +64,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
       end
     end
     #pp facts.to_json
-    return facts.to_json
+    return facts
     end
 end
 
