@@ -48,5 +48,4 @@ shown in the example below:
       vsanid => "1000",
       ensure => "present"
   }
-}
 
