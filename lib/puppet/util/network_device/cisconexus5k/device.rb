@@ -1,7 +1,7 @@
 require 'pp'
 require 'puppet'
 require 'puppet/util'
-require 'puppet/util/network_device/base'
+require 'puppet/util/network_device/base_nxos'
 require 'puppet/util/network_device/cisconexus5k/facts'
 
 #
@@ -14,7 +14,7 @@ require 'puppet/util/network_device/cisconexus5k/facts'
 # * update_vlan: delete/create VLAN
 #
 
-class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkDevice::Base
+class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkDevice::Base_nxos
 
   include Puppet::Util::NetworkDevice::IPCalc
 
@@ -449,7 +449,7 @@ shutdownswitchinterface={},interfaceoperation={})
             iskeymatched = true
             #matching zoneset found so update it.
             
-            Puppet.info ("Updating a zoneset: #{id} with VSAN #{vsanid} on device")
+            Puppet.info("Updating a zoneset: #{id} with VSAN #{vsanid} on device")
              mem = {}
              if (member !=nil)
                 mem = member.split(",")
