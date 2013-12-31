@@ -35,8 +35,8 @@ Puppet::Type.newtype(:vlan) do
 
     newproperty(:istrunkforinterface) do
       desc "Trunking is true or false for interface."
-      newvalues(:true, :false)
-      defaultto(:true)
+      newvalues("true", "false")
+      defaultto("true")
       munge do |value|
         if value.strip.length == 0
           value.to_s
@@ -61,7 +61,7 @@ Puppet::Type.newtype(:vlan) do
 
     newproperty(:interfaceoperation) do
       desc "The interface operation."
-      newvalues(:add, :remove)
+      newvalues("add", "remove")
       munge do |value|
         if value.strip.length == 0
           value.to_s
@@ -81,8 +81,8 @@ Puppet::Type.newtype(:vlan) do
 
     newproperty(:isnative) do
       desc "The interface is associated with native vlan or not"
-      newvalues(:true, :false)
-      defaultto(:true)
+      newvalues("true", "false")
+      defaultto("true")
       munge do |value|
         if value.strip.length == 0
           value.to_s
@@ -111,8 +111,8 @@ Puppet::Type.newtype(:vlan) do
 
     newproperty(:removeallassociatedvlans) do
       desc "Remove all associated vlans or not."
-      newvalues(:true, :false)
-      defaultto(:true)
+      newvalues("true", "false")
+      defaultto("true")
       munge do |value|
         value.to_s
       end
@@ -120,8 +120,8 @@ Puppet::Type.newtype(:vlan) do
 
     newproperty(:deletenativevlaninformation) do
       desc "Delete native vlan information or not."
-      newvalues(:true, :false)
-      defaultto(:true)
+      newvalues("true", "false")
+      defaultto("true")
       munge do |value|
         if value.strip.length == 0
           value.to_s
@@ -133,8 +133,8 @@ Puppet::Type.newtype(:vlan) do
 
     newproperty(:unconfiguretrunkmode) do
       desc "Un configure trunk mode or not."
-      newvalues(:true, :false)
-      defaultto(:true)
+      newvalues("true", "false")
+      defaultto("true")
       munge do |value|
         if value.strip.length == 0
           value.to_s
@@ -146,8 +146,8 @@ Puppet::Type.newtype(:vlan) do
 
     newproperty(:shutdownswitchinterface) do
       desc "Shutdown switch interface or or not."
-      newvalues(:true, :false)
-      defaultto(:true)
+      newvalues("true", "false")
+      defaultto("true")
       munge do |value|
         if value.strip.length == 0
           value.to_s
@@ -172,7 +172,7 @@ Puppet::Type.newtype(:vlan) do
 
     newproperty(:portchanneloperation) do
       desc "The port channel operation."
-      newvalues(:add, :remove)
+      newvalues("add", "remove")
       munge do |value|
         if value.strip.length == 0
           value.to_s
@@ -184,8 +184,8 @@ Puppet::Type.newtype(:vlan) do
 
     newproperty(:istrunkforportchannel) do
       desc "Trunking is true or false for portchannel."
-      newvalues(:true, :false)
-      defaultto(:true)
+      newvalues("true", "false")
+      defaultto("true")
       munge do |value|
         if value.strip.length == 0
           value.to_s
