@@ -104,7 +104,7 @@ Puppet::Type.newtype(:vlan) do
           raise ArgumentError, "The value of the native VLAN Id must be a positive integer."
         end
         if value.to_i == 0
-          raise ArgumentError, "The entered native VLAN Id “0” is invalid."
+          raise ArgumentError, "The entered native VLAN Id 0 is invalid."
         end
       end
     end
@@ -165,7 +165,7 @@ Puppet::Type.newtype(:vlan) do
           raise ArgumentError, "The value of the Port Channel Id must be a positive integer."
         end
         if value.to_i == 0
-          raise ArgumentError, "The entered value of the Post Channel Id “0” is invalid."
+          raise ArgumentError, "The entered value of the Post Channel Id 0 is invalid."
         end
       end
     end
