@@ -21,16 +21,26 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
     out = @transport.command("sh ver")
 
     for line in out.split("\n")
-      if (line =~ /(?:Cisco )?(IOS)\s*(?:\(tm\) |Software, )?(?:\w+)\s+Software\s+\(\w+-(\w+)-\w+\), Version ([0-9.()A-Za-z]+),/)
-        facts["operatingsystem"] = $1
-        facts["operatingsystemrelease"] = $3
-        facts["operatingsystemfeature"] = $2
+      if (line =~ /BIOS:\s+version\s+(\S+)/)
+        facts["biosversion"] = $1 
+      end
+      if (line =~ /kickstart:\s+version\s+(\S+)/)
+        facts["kickstartversion"] = $1
+      end
+      if (line =~ /system:\s+version\s+(\S+)/)
+        facts["systemversion"] = $1
       end
       if (line =~ /kickstart\ image\ file\ is:\s+(\S+)/)
         facts["kickstartimage"] = $1
       end
       if (line =~ /system\ image\ file\ is:\s+(\S+)/)
         facts["systemimage"] = $1
+      end
+      if (line =~ /cisco\s+(\S+)\s+Chassis/)
+        facts["model"] = $1
+      end    
+      if (line =~ /Device\s+name:\s+(\S+)/)
+        facts["hostname"] = $1 
       end
     end
 
@@ -52,7 +62,13 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
                 untaggedvlan = $1
             end
         end
-        fact = { :interface_name => res[0], :type => res[2], :mode => res[3], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1], :reason => res[5..length - 3], :tagged_vlan => taggedvlan, :untagged_vlan => untaggedvlan }
+
+        out = @transport.command("show interface #{interface_name} mac-address")
+        lines = out.split("\n")
+        lines.shift; lines.shift; lines.shift; lines.shift; lines.shift; lines.pop
+        line = lines[0].split(" ")
+        mac_address = line[2]
+        fact = { :interface_name => res[0], :type => res[2], :mode => res[3], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1], :reason => res[5..length - 3], :tagged_vlan => taggedvlan, :untagged_vlan => untaggedvlan, :macaddress => mac_address }
         facts[fact[:interface_name]] = fact
       end
       if ( line =~ /^fc(\d+)/ )
@@ -62,8 +78,19 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
         fact = { :interface_name => res[0], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1] }
         facts[fact[:interface_name]] = fact
       end
+      if ( line =~ /^mgmt0/ )
+        res = line.split(" ")
+        management_ip = res[3]
+        facts[:managementip] = management_ip
+      end
     end
-    #pp facts.to_json
+    out = @transport.command("show inventory")
+    if ( out =~ /NAME:\s+"Chassis",\s+DESCR:.*\n.*SN:\s+(\S+)/ )
+      facts[:chassisserialnumber] = $1
+    end
+    # since we can communicate with the switch, set status to online
+    facts[:status] = "online"
+    #pp facts
     return facts
     end
 end
