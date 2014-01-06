@@ -146,12 +146,12 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
         zone = { :name => $1, :vsanid => $2, :membertype => [], :member => [] }
       end
       if l =~ /pwwn\s*(\S*)/
-        zone[:member] += $1.map{ |ifn| canonalize_ifname(ifn) }
-        zone[:membertype] += 'pwwn'.map{ |ifn| canonalize_ifname(ifn) }
+        zone[:member] += Array($1).map{ |ifn| canonalize_ifname(ifn) }
+        zone[:membertype] += Array('pwwn').map{ |ifn| canonalize_ifname(ifn) }
       end
       if l =~/fcalias name\s*(\S*)\s*vsan\s*(\d*)/
-        zone[:member] += $1.map{ |ifn| canonalize_ifname(ifn) }
-        zone[:membertype] += 'fcalias'.map{ |ifn| canonalize_ifname(ifn) }
+        zone[:member] += Array($1).map{ |ifn| canonalize_ifname(ifn) }
+        zone[:membertype] += Array('fcalias').map{ |ifn| canonalize_ifname(ifn) }
       end
       zones[zone[:name]] = zone
     end 
@@ -221,7 +221,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
         end
         if l =~ /zone\s+(\S*)/
              #Puppet.debug("Zoneset: #{zoneset[:name]} Member: #{$1}")
-             zoneset[:member] += $1.map{ |ifn| canonalize_ifname(ifn) }
+             zoneset[:member] += Array($1).map{ |ifn| canonalize_ifname(ifn) }
         end
         zonesets["VSAN_"+zoneset[:vsanid]+"_"+zoneset[:name]] = zoneset
         #Puppet.debug("Found Zoneset-> zonesetName : #{zoneset[:name]} vsanid : #{zoneset[:vsanid]} member : #{zoneset[:member]} active : #{zoneset[:active]}")

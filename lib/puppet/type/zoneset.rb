@@ -35,7 +35,7 @@ Puppet::Type.newtype(:zoneset) do
   newproperty(:member) do
     desc "member zones"
     validate do |value|
-      unless value =~ /^((\w+)(,*))*$/
+      unless value =~ /^((\w+)(.*)(,*))*$/
          raise ArgumentError, "\'%s\' is not a valid format." % value
       end
     end
