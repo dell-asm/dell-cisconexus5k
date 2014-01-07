@@ -6,14 +6,13 @@ require 'puppet/util/network_device/transport/base'
 class Puppet::Util::NetworkDevice::Base_nxos
 
   attr_accessor :url, :transport
-
   def initialize(url, options = {})
     @url = URI.parse(url)
 
     @autoloader = Puppet::Util::Autoload.new(
-      self,
-      "puppet/util/network_device/transport",
-      :wrap => false
+    self,
+    "puppet/util/network_device/transport",
+    :wrap => false
     )
 
     if @autoloader.load(@url.scheme)

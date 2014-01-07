@@ -5,7 +5,6 @@ Puppet::Type.type(:vlan).provide :cisconexus5k, :parent => Puppet::Provider::Cis
   desc "Cisco switch/router provider for vlans."
 
   mk_resource_methods
-
   def self.lookup(device, id)
     vlans = {}
     device.command do |dev|

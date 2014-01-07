@@ -5,13 +5,12 @@ Puppet::Type.type(:zone).provide :cisconexus5k , :parent => Puppet::Provider::Ci
   desc "Cisco switch/router provider for zone."
 
   mk_resource_methods
-
   def self.lookup(device, id)
     zones = {}
     device.command do |dev|
       zones = dev.parse_zones || {}
     end
-     zones[id]
+    zones[id]
   end
 
   def initialize(device, *args)

@@ -5,7 +5,6 @@ Puppet::Type.type(:zoneset).provide :cisconexus5k , :parent => Puppet::Provider:
   desc "Cisco switch/router provider for ZoneSet."
 
   mk_resource_methods
-
   def self.lookup(device, id)
     zonesets = {}
     device.command do |dev|

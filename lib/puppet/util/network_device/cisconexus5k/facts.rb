@@ -10,7 +10,6 @@ require 'puppet/util/network_device/ipcalc'
 class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
 
   attr_reader :transport
-
   def initialize(transport)
     @transport = transport
   end
@@ -22,7 +21,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
 
     for line in out.split("\n")
       if (line =~ /BIOS:\s+version\s+(\S+)/)
-        facts["biosversion"] = $1 
+        facts["biosversion"] = $1
       end
       if (line =~ /kickstart:\s+version\s+(\S+)/)
         facts["kickstartversion"] = $1
@@ -38,9 +37,9 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
       end
       if (line =~ /cisco\s+(\S+)\s+Chassis/)
         facts["model"] = $1
-      end    
+      end
       if (line =~ /Device\s+name:\s+(\S+)/)
-        facts["hostname"] = $1 
+        facts["hostname"] = $1
       end
     end
 
@@ -55,12 +54,12 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
         length = res.length
         vlan_info = @transport.command("show interface #{interface_name} switchport")
         for templine in vlan_info.split("\n")
-            if (templine =~ /Access\s*Mode\s*VLAN:\s*(\S*)/)
-                taggedvlan = $1
-            end
-            if (templine =~ /Trunking\s*Native\s*Mode\s*VLAN:\s*(\S*)/)
-                untaggedvlan = $1
-            end
+          if (templine =~ /Access\s*Mode\s*VLAN:\s*(\S*)/)
+            taggedvlan = $1
+          end
+          if (templine =~ /Trunking\s*Native\s*Mode\s*VLAN:\s*(\S*)/)
+            untaggedvlan = $1
+          end
         end
 
         out = @transport.command("show interface #{interface_name} mac-address")
@@ -92,6 +91,6 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
     facts[:status] = "online"
     #pp facts
     return facts
-    end
+  end
 end
 
