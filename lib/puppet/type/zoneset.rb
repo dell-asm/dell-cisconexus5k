@@ -1,7 +1,7 @@
 #
-#Manages a Zoneset on a given switch
+# The zoneset type/provider supports the functionality to create and delete 
+# zonesets on the Nexus 5000 switch. 
 #
-#require 'puppet/parameter/boolean'
 
 Puppet::Type.newtype(:zoneset) do
   @doc = "Manage Cisco nexus zoneset creation, modification and deletion."

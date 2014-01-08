@@ -1,5 +1,6 @@
 #
-# Manages a Zone on a given router or switch
+# The zone type/provider supports functionality to create and delete zones on the 
+# Nexus 5000 switch. 
 #
 
 Puppet::Type.newtype(:zone) do

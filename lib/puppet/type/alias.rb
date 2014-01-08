@@ -1,6 +1,8 @@
 #
-# Manages an alias
+# The alias type supports the functionality to create and delete aliases
+# on the Cisco nexus switch. 
 #
+
 Puppet::Type.newtype(:alias) do
   @doc = "Manages an alias"
   apply_to_device

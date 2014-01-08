@@ -1,5 +1,6 @@
 #
-# Manages a VLAN
+# The VLAN type/provider supports the functionality to create and delete the VLAN 
+# on the Nexus 5000 switch.
 #
 
 Puppet::Type.newtype(:vlan) do
