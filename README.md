@@ -111,9 +111,8 @@ Aliases can be created using the following manifest
 
 ###Description
 
-The VLAN type/provider supports functionality to create and delete zones on the 
+The zone type/provider supports functionality to create and delete zones on the 
 Nexus 5000 switch. 
-
 
 ####Summary of Properties
 
