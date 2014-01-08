@@ -43,6 +43,27 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
       end
     end
 
+    protocols = ""
+    out = @transport.command("show feature")
+    lines = out.split("\n")
+    lines.shift; lines.shift; lines.shift; lines.pop
+    count = 1
+    for line in lines
+      if (line =~ /^(\S+)\s+\d+\s+enabled/)
+        if count == 1
+          protocols = $1
+          count = count + 1
+        else
+          protocols = protocols + "," + $1
+        end
+      end
+    end
+    facts["protocols_enabled"] = protocols
+
+    # TODO Add memory and processor info
+    facts["memory"] = ""
+    facts["processor"] = ""
+
     interface_res = @transport.command("show interface brief")
     fact = nil
     ethernet_interface_count = 0
