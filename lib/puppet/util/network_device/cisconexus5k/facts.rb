@@ -60,9 +60,12 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
     end
     facts["protocols_enabled"] = protocols
 
-    # TODO Add memory and processor info
-    facts["memory"] = ""
-    facts["processor"] = ""
+    out = @transport.command("show system resources")
+    if (out =~ /Memory usage:\s+(\S+) total,\s+(\S+) used,\s+(\S+) free/)
+      facts["mem_total"] = $1
+      facts["mem_used"] = $2
+      facts["mem_free"] = $3
+    end
 
     interface_res = @transport.command("show interface brief")
     fact = nil
