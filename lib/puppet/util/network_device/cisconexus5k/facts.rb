@@ -67,6 +67,12 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
       facts["mem_free"] = $3
     end
 
+    if (out =~ /CPU states\s+:\s+(\S+) user,\s+(\S+) kernel,\s+(\S+) idle/)
+      facts["cpu_user"] = $1
+      facts["cpu_kernel"] = $2
+      facts["cpu_idle"] = $3
+    end
+    
     interface_res = @transport.command("show interface brief")
     fact = nil
     ethernet_interface_count = 0
