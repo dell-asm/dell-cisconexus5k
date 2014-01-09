@@ -259,8 +259,8 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     execute("exit")
   end
 
-  def update_vlan(id, is = {}, should = {})
-    if should[:ensure] == :absent
+  def update_vlan(id, is = {}, should = {}, tempensure)
+    if should[:ensure] == :absent || tempensure == :absent
       Puppet.info "A VLAN #{id} is being removed from the device."
       execute("conf t")
       out = execute("no vlan #{id}")
@@ -292,12 +292,12 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
   end
 
   def update_interface(id, is = {}, should = {},interfaceid = {},nativevlanid={},istrunk = {},encapsulationtype={},isnative={},deletenativevlaninformation={},unconfiguretrunkmode={},
-    shutdownswitchinterface={},interfaceoperation={})
+shutdownswitchinterface={},interfaceoperation={}, removeallassociatedvlans={},ensureabsent)
     responseinterface = execute("show interface #{interfaceid}")
     if ( responseinterface =~ /Invalid/ )
       raise "The interface #{interfaceid} does not exist on the switch."
     end
-    if should[:ensure] == :absent || interfaceoperation == "remove"
+    if should[:ensure] == :absent || interfaceoperation == "remove" || ensureabsent == :absent
       Puppet.info "The interface #{interfaceid} is being removed from the VLAN #{id}."
       execute("conf t")
       execute("interface #{interfaceid}")
@@ -339,14 +339,8 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
 
     # We're creating or updating an entry
     execute("conf t")
-    interfaceid = should[:interface]
-    encapsulationtype = should[:interfaceencapsulationtype]
-    nativevlanid = should[:nativevlanid]
     execute("interface #{interfaceid}")
-    [is.keys, should.keys].flatten.uniq.each do |property|
-      Puppet.debug("trying property: #{property}: #{should[property]}")
-      next if property != :istrunkforinterface
-      if should[:istrunkforinterface] == "true"
+       if istrunk == "true"
         Puppet.debug("Verify whether or not the specified interface is already configured as a trunk interface.")
         responsetrunk = execute("show interface #{interfaceid} trunk")
         if ( responsetrunk =~ /Invalid/ )
@@ -364,12 +358,10 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
           end
           execute("switchport mode trunk")
         end
-        removeallassociatedvlans = should[:removeallassociatedvlans]
         if removeallassociatedvlans == "true"
           Puppet.info("The associated VLANs are being deleted.")
           execute("switchport trunk allowed vlan none")
         end
-        isnative = should[:isnative]
         if isnative == "true"
           Puppet.info("A switch interface with a native VLAN is being configured.")
           execute("switchport trunk native vlan #{nativevlanid}")
@@ -383,7 +375,6 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
         execute("switchport access vlan #{id}")
         execute("no shutdown")
       end
-    end
     execute("exit")
     execute("exit")
     return
@@ -578,7 +569,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     return trunk
   end
 
-  def update_portchannel(id, is = {}, should = {}, portchannel = {}, istrunkforportchannel = {},portchanneloperation = {})
+  def update_portchannel(id, is = {}, should = {}, portchannel = {}, istrunkforportchannel = {},portchanneloperation = {},ensureabsent)
     if portchannel !~ /\d/
       Puppet.info("The port channel #{portchannel} should be numeric value.")
       return
@@ -589,7 +580,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
       raise "A port channel #{portchannel} does not exist on the switch."
       return
     end
-    if should[:ensure] == :absent || portchanneloperation == "remove"
+    if should[:ensure] == :absent || portchanneloperation == "remove" || ensureabsent == :absent
       Puppet.info "A port channel #{portchannel} is being deleted from the device VLAN #{id}."
       execute("conf t")
       execute("interface port-channel #{portchannel}")
@@ -603,8 +594,6 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
 
     # We're creating or updating an entry
     execute("conf t")
-    portchannel = should[:portchannel]
-    istrunkforportchannel = should[:istrunkforportchannel]
     execute("interface port-channel #{portchannel}")
     execute("switchport")
     if (istrunkforportchannel == "true")
