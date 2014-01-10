@@ -3,7 +3,7 @@
 require 'spec_helper'
 describe Puppet::Type.type(:zone) do
     zone_conf = YAML.load_file(get_configpath('cisconexus5k','zone_config.yml'))
-    zone_attrib = zone_conf['zone_configuration_type'] 
+    zone_attrib = zone_conf['zone_configuration_type']
     let(:title) { 'zone' }
         #++++++++++++++++++++++++++++++++++++++++++++++++++++
    context "should compile with given test params"  do
@@ -54,7 +54,7 @@ describe Puppet::Type.type(:zone) do
             :member                         => zone_attrib['member'],
             :membertype                     => zone_attrib['membertype'],
             :vsanid                         => zone_attrib['vsanid'],
-            :ensure                         => zone_attrib['ensure'])[:name].should == 'Zone_EB'
+            :ensure                         => zone_attrib['ensure'])[:name].should == zone_attrib['name']
                         end
                   it "should not allow blank value in the name" do
                         expect { described_class.new(:name => '',
@@ -70,7 +70,7 @@ describe Puppet::Type.type(:zone) do
             :ensure                         => zone_attrib['ensure'],
             :member                         => zone_attrib['member'],
             :membertype                     => zone_attrib['membertype'],
-            :vsanid                         => zone_attrib['vsanid'])[:ensure].should == :present
+            :vsanid                         => zone_attrib['vsanid'])[:ensure].should == (zone_attrib['ensure'] == 'present' ? :present : (zone_attrib['ensure'] == 'absent' ? :absent : zone_attrib['ensure']))
                         end
 
                         it "should not allow values other than present or absent" do

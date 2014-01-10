@@ -22,10 +22,11 @@ Puppet::Type.type(:alias).provide :cisconexus5k, :parent => Puppet::Provider::Ci
     Puppet.debug "Former_properties #{former_properties}"
     Puppet.debug "properties #{properties}"
     device.command do |dev|
-      dev.update_alias(resource[:name], former_properties, properties)
+      dev.update_alias(resource[:name], former_properties, properties, resource[:member], resource[:ensure])
     end
     super
     former_properties.clear
     properties.clear
   end
 end
+

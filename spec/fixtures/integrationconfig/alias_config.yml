@@ -1,0 +1,9 @@
+alias_configuration_provider:
+   ensure: 'absent'
+   name: 'Alias_EB'
+   member: '51:06:01:69:3e:e0:41:dc'
+
+alias_configuration_type:
+   ensure: 'absent'
+   name: 'Alias_EB'
+   member: '51:06:01:69:3e:e0:41:dc'
