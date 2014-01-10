@@ -645,9 +645,9 @@ shutdownswitchinterface={},interfaceoperation={}, removeallassociatedvlans={},en
     return
   end
 
-  def update_zone(id, is = {}, should = {}, vsanid = {}, membertype = {}, member = {})
+  def update_zone(id, is = {}, should = {}, vsanid = {}, membertype = {}, member = {}, tempensure = {})
     mem = member.split(",")
-    if should[:ensure] == :absent
+    if tempensure.to_s == "absent" || should[:ensure] == :absent
       Puppet.info "Zone #{id} is being destroyed."
       execute("conf t")
       Puppet.debug "conf t"
