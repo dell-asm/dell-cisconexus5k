@@ -1,0 +1,13 @@
+zone_configuration_provider:
+   ensure: 'absent'
+   name: 'Zone_EB'
+   member: '51:06:01:69:3e:e0:41:dc,55:06:01:69:3e:e0:41:dc,34:06:01:69:3e:e0:40:ab,46:06:01:69:3e:e0:41:ab'
+   membertype: 'pwwn'
+   vsanid: '1111'
+
+zone_configuration_type:
+   ensure: 'present'
+   name: 'Zone_EB'
+   member: '51:06:01:69:3e:e0:41:dc,55:06:01:69:3e:e0:41:dc,34:06:01:69:3e:e0:40:ab,46:06:01:69:3e:e0:41:ab'
+   membertype: 'pwwn'
+   vsanid: '1111'
