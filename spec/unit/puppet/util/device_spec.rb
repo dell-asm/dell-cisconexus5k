@@ -187,12 +187,25 @@ device-alias name ABC_CK5JMY1_B2 pwwn 21:00:00:25:ff:4b:18:e5
 Total number of entries = 12
 NEXUS-5548-Bottom#
 END
+    @temp_alias = "Alias_Demo1"
+    @temp_member = "50:00:d3:17:00:5e:c4:08"
     end
     it "should parse Alias." do
       @cisco.should_receive(:execute).once.with("show device-alias database").and_return(@alias_output)
       aliashash = @cisco.parse_alias
-      aliashash.has_key?("Alias_Demo1").should == true
+      aliashash.has_key?(@temp_alias).should == true
     end
+
+#    it "should create an Alias." do
+#      @cisco.should_receive(:execute).once.with("conf t").and_return("")
+#      @cisco.should_receive(:execute).once.with("device-alias database").and_return("")
+#      @cisco.should_receive(:execute).once.with("device-alias name  #{@temp_alias} pwwn #{@temp_member}").and_return("")
+#      @cisco.should_receive(:execute).once.with("device-alias commit").and_return("")
+#      @cisco.should_receive(:execute).once.with("exit").and_return("")
+#      @cisco.should_receive(:execute).once.with("exit").and_return("")
+#      @cisco.update_alias(@temp_alias, should = {:member => "50:00:d3:17:00:5e:c4:08", :ensure => 'present'})
+#    end
+
   end
 
 
