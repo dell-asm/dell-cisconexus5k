@@ -230,9 +230,9 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     zonesets
   end
 
-  def update_alias(id, is = {}, should = {},member = {}, tempensure = {} )
-    #member=should[:member]
-    if  tempensure.to_s == "absent" || should[:ensure] == :absent
+  def update_alias(id, is = {}, should = {})
+    member=should[:member]
+    if should[:ensure] == :absent
       Puppet.debug "Removing #{id} from device alias"
       execute("conf t")
       execute("device-alias database")
@@ -380,14 +380,14 @@ shutdownswitchinterface={},interfaceoperation={}, removeallassociatedvlans={},en
     return
   end
 
-  def update_zoneset(id, is = {}, should = {}, member = {}, active = {}, force = {}, vsanid = {})
+  def update_zoneset(id, is = {}, should = {}, member = {}, active = {}, force = {}, vsanid = {}, ensureabsent)
     Puppet.debug("INPUTS: zonesetName : #{id} vsanid : #{vsanid} member : #{member} active : #{active} force : #{force}")
     #Fetch the existing config from switch
     existingzonesets = get_all_zonesets
     iskeymatched = false
 
     # Delete Zoneset - start
-    if should[:ensure] == :absent
+    if should[:ensure] == :absent || ensureabsent == :absent
       existingzonesets.each do |key, value|
         Puppet.debug("System Zoneset key: #{key} name: #{value[:name]} VSAN: #{value[:vsanid]}, Required Zoneset key: name: #{id} VSAN: #{vsanid}")
         if value[:name] == id && value[:vsanid] == vsanid

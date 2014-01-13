@@ -20,7 +20,7 @@ Puppet::Type.type(:zoneset).provide :cisconexus5k , :parent => Puppet::Provider:
   # Clear out the cached values.
   def flush
     device.command do |dev|
-      dev.update_zoneset(resource[:name], former_properties, properties, resource[:member], resource[:active], resource[:force], resource[:vsanid])
+      dev.update_zoneset(resource[:name], former_properties, properties, resource[:member], resource[:active], resource[:force], resource[:vsanid], resource[:ensure])
     end
     super
   end
