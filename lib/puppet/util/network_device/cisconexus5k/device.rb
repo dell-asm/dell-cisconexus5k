@@ -230,9 +230,9 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     zonesets
   end
 
-  def update_alias(id, is = {}, should = {})
-    member=should[:member]
-    if should[:ensure] == :absent
+  def update_alias(id, is = {}, should = {},member = {}, tempensure = {} )
+    #member=should[:member]
+    if  tempensure.to_s == "absent" || should[:ensure] == :absent
       Puppet.debug "Removing #{id} from device alias"
       execute("conf t")
       execute("device-alias database")
