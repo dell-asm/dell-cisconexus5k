@@ -1,0 +1,15 @@
+zoneset_configuration_provider:
+   ensure: 'present'
+   name: 'Zoneset_Demo'
+   vsanid: '1111'
+   member: 'Zone_Demo1,Zone_Demo2,Zone_Demo3'
+   active: 'true'
+   force: 'true'
+
+zoneset_configuration_type:
+   ensure: 'present'
+   name: 'Zoneset_Demo'
+   vsanid: '1111'
+   member: 'Zone_Demo1,Zone_Demo2,Zone_Demo3'
+   active: 'true'
+   force: 'true'
