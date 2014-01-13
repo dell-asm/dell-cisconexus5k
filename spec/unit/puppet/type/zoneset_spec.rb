@@ -1,4 +1,5 @@
 require 'spec_helper'
+
 #require '/etc/puppet/modules/cisconexus5k/lib/puppet/type/zoneset'
 describe Puppet::Type.type(:zoneset)  do
   let(:title) {'zoneset'}
@@ -8,15 +9,15 @@ describe Puppet::Type.type(:zoneset)  do
   end
 
   it "Should have name property as its key for zoneset." do
-      described_class.key_attributes.should == [:name]
+    described_class.key_attributes.should == [:name]
   end
-  
-  context "When validating valid properties:" do   
+
+  context "When validating valid properties:" do
     [:member, :vsanid, :ensure, :active, :force].each do |param|
       it "should have a #{param} property." do
         described_class.attrtype(param).should == :property
       end
-    end 
+    end
   end
 
   context "When validating invalid properties:" do
@@ -37,16 +38,15 @@ describe Puppet::Type.type(:zoneset)  do
       it "should support underscores." do
         described_class.new(:name => 'zoneset_1', :member => 'zone1', :ensure => 'present', :vsanid => '999', :active => 'false', :force => 'false')[:name].should == 'zoneset_1'
       end
-        
+
       it "should not support blank value." do
         expect { described_class.new(:name => '', :member => 'zone1', :ensure => 'present', :vsanid => '999', :active => 'false', :force => 'false')}.to raise_error(Puppet::Error, /not a valid zoneset name/)
       end
-		
+
       it "should not support special characters." do
         expect { described_class.new(:name => 'zoneset#$%11', :member => 'zone1', :ensure => 'present', :vsanid => '999', :active => 'false', :force => 'false')}.to raise_error(Puppet::Error, /not a valid zoneset name/)
       end
     end
-
 
     describe "validating vsanid property:" do
       it "should support digits." do
@@ -70,7 +70,6 @@ describe Puppet::Type.type(:zoneset)  do
       end
     end
 
-
     describe "validating active property:" do
       it "should support true." do
         described_class.new(:member => 'zone1', :name => 'zoneset1', :ensure => 'present', :vsanid => '999', :active => 'true', :force => 'false')[:active].should == 'true'
@@ -84,7 +83,6 @@ describe Puppet::Type.type(:zoneset)  do
         expect { described_class.new(:member => 'zone1', :name => 'zoneset1', :ensure => 'present', :vsanid => '999', :active => 'invalidvalue', :force => 'false') }.to raise_error(Puppet::Error, /not a valid value/)
       end
     end
-
 
     describe "validating force property:" do
       it "should support true." do
@@ -100,13 +98,11 @@ describe Puppet::Type.type(:zoneset)  do
       end
     end
 
-
     describe "validating member property:" do
       it "should support semicolon separated list of member zones." do
         described_class.new(:member => 'zone1,zone2', :name => 'zoneset1', :ensure => 'present', :vsanid => '999', :active => 'false', :force => 'false')[:member].should == 'zone1,zone2'
       end
     end
-
 
     describe "validating ensure property:" do
       it "should support present." do
@@ -121,7 +117,7 @@ describe Puppet::Type.type(:zoneset)  do
         expect { described_class.new(:member => 'zone1', :name => 'zoneset1', :ensure => 'negativetest', :vsanid => '999', :active => 'false', :force => 'false') }.to raise_error(Puppet::Error, /Invalid value "negativetest"/)
       end
     end
-	
-  end 
+
+  end
 end
 

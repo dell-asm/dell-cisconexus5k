@@ -2,7 +2,6 @@
 #provider_path = Pathname.new(__FILE__).parent.parent
 require 'puppet/provider/cisconexus5k'
 require 'puppet/util/network_device/cisconexus5k/device'
-
 require 'spec_helper'
 require 'yaml'
 
@@ -35,7 +34,7 @@ describe Puppet::Util::NetworkDevice::Cisconexus5k::Device do
     it "should have command method defined." do
       described_class.instance_method(:command).should_not == nil
     end
-  
+
     it "should have execute method defined." do
       described_class.instance_method(:execute).should_not == nil
     end
@@ -43,12 +42,11 @@ describe Puppet::Util::NetworkDevice::Cisconexus5k::Device do
     it "should have login method defined." do
       described_class.instance_method(:login).should_not == nil
     end
-	
+
     it "should have parent 'Puppet::Util::NetworkDevice::Base_nxos'" do
       @cisco.should be_kind_of(Puppet::Util::NetworkDevice::Base_nxos)
     end
   end
-
 
   describe "when connecting to the physical device." do
     it "should connect to the transport." do
@@ -60,34 +58,34 @@ describe Puppet::Util::NetworkDevice::Cisconexus5k::Device do
 
     it "should attempt to login." do
       @transport.should_receive(:connect)
-    	@cisco.should_receive(:login)
+      @cisco.should_receive(:login)
       @transport.should_receive(:command).once.with("terminal length 0")
       @cisco.connect
     end
   end
   describe "when login in." do
-      it "should not login if transport handles login." do
-        @transport.should_receive(:handles_login?).and_return(true)
-        @transport.should_not_receive(:command)
-        @transport.should_not_receive(:expect)
-        @cisco.login
-  end
-
-      it "should send username and password if transport don't handle login." do
-	@transport.should_receive(:handles_login?).and_return(false)
-        @transport.should_receive(:command).with("admin", {:prompt => /^Password:/})
- 	@transport.should_receive(:command).with("p!ssw0rd")
-        @cisco.login
-      end
-
-      it "should expect the Password: prompt if no user was sent." do
-	@transport.should_receive(:handles_login?).and_return(false)
-        @cisco.url.user = ''
-        @transport.should_receive(:expect).once.with(/^Password:/)
-        @transport.should_receive(:command).once.with("p!ssw0rd")
-        @cisco.login
-      end
+    it "should not login if transport handles login." do
+      @transport.should_receive(:handles_login?).and_return(true)
+      @transport.should_not_receive(:command)
+      @transport.should_not_receive(:expect)
+      @cisco.login
     end
+
+    it "should send username and password if transport don't handle login." do
+      @transport.should_receive(:handles_login?).and_return(false)
+      @transport.should_receive(:command).with("admin", {:prompt => /^Password:/})
+      @transport.should_receive(:command).with("p!ssw0rd")
+      @cisco.login
+    end
+
+    it "should expect the Password: prompt if no user was sent." do
+      @transport.should_receive(:handles_login?).and_return(false)
+      @cisco.url.user = ''
+      @transport.should_receive(:expect).once.with(/^Password:/)
+      @transport.should_receive(:command).once.with("p!ssw0rd")
+      @cisco.login
+    end
+  end
 
   describe "when disconnecting from the device." do
     it "should disconnect from the transport." do
@@ -187,8 +185,8 @@ device-alias name ABC_CK5JMY1_B2 pwwn 21:00:00:25:ff:4b:18:e5
 Total number of entries = 12
 NEXUS-5548-Bottom#
 END
-    @temp_alias = "Alias_Demo1"
-    @temp_member = "50:00:d3:17:00:5e:c4:08"
+      @temp_alias = "Alias_Demo1"
+      @temp_member = "50:00:d3:17:00:5e:c4:08"
     end
     it "should parse Alias." do
       @cisco.should_receive(:execute).once.with("show device-alias database").and_return(@alias_output)
@@ -196,18 +194,17 @@ END
       aliashash.has_key?(@temp_alias).should == true
     end
 
-#    it "should create an Alias." do
-#      @cisco.should_receive(:execute).once.with("conf t").and_return("")
-#      @cisco.should_receive(:execute).once.with("device-alias database").and_return("")
-#      @cisco.should_receive(:execute).once.with("device-alias name  #{@temp_alias} pwwn #{@temp_member}").and_return("")
-#      @cisco.should_receive(:execute).once.with("device-alias commit").and_return("")
-#      @cisco.should_receive(:execute).once.with("exit").and_return("")
-#      @cisco.should_receive(:execute).once.with("exit").and_return("")
-#      @cisco.update_alias(@temp_alias, should = {:member => "50:00:d3:17:00:5e:c4:08", :ensure => 'present'})
-#    end
+    #    it "should create an Alias." do
+    #      @cisco.should_receive(:execute).once.with("conf t").and_return("")
+    #      @cisco.should_receive(:execute).once.with("device-alias database").and_return("")
+    #      @cisco.should_receive(:execute).once.with("device-alias name  #{@temp_alias} pwwn #{@temp_member}").and_return("")
+    #      @cisco.should_receive(:execute).once.with("device-alias commit").and_return("")
+    #      @cisco.should_receive(:execute).once.with("exit").and_return("")
+    #      @cisco.should_receive(:execute).once.with("exit").and_return("")
+    #      @cisco.update_alias(@temp_alias, should = {:member => "50:00:d3:17:00:5e:c4:08", :ensure => 'present'})
+    #    end
 
   end
-
 
   describe "when parsing Zonesets." do
     before do
@@ -235,7 +232,7 @@ zoneset name Zoneset_Demo1 vsan 999
   * fcid 0x5f30a0 [pwwn 50:00:d2:10:00:5e:c4:0a] [netappwwpn4]
 NEXUS-5548-Bottom#
 END
-    @allzoneset_output = <<END
+      @allzoneset_output = <<END
 NEXUS-5548-Bottom# show zoneset brief
 zoneset name Zoneset_Demo1 vsan 999
   zone Zone_Demo1
@@ -260,21 +257,20 @@ END
     end
   end
 
-#    my_url = 'ssh://admin:p!ssw0rd@172.17.7.15:22/'
-#    my_device = Puppet::Util::NetworkDevice::Cisconexus5k::Device.new(my_url)
-#    my_device.connect()
-#    let :provider do
-#        described_class.new(my_url)
-#    end
+  #    my_url = 'ssh://admin:p!ssw0rd@172.17.7.15:22/'
+  #    my_device = Puppet::Util::NetworkDevice::Cisconexus5k::Device.new(my_url)
+  #    my_device.connect()
+  #    let :provider do
+  #        described_class.new(my_url)
+  #    end
 
-#    describe "when parse zonesets" do
-#        it "Parse Zonesets" do
-#	   @cisco.connect()
-#           syszonesets = @cisco.parse_zonesets
-#           puts ("#{syszonesets}")
-#        end
-#    end
-    
+  #    describe "when parse zonesets" do
+  #        it "Parse Zonesets" do
+  #	   @cisco.connect()
+  #           syszonesets = @cisco.parse_zonesets
+  #           puts ("#{syszonesets}")
+  #        end
+  #    end
 
 end
 
