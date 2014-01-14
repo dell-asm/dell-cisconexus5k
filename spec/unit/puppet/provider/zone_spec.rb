@@ -38,7 +38,7 @@ describe Puppet::Type.type(:zone).provider(:cisconexus5k) do
       @transport.should_receive(:handles_login?).and_return(true)
       @transport.should_receive(:command).once.with("terminal length 0")
       @device.should_receive(:execute).with("conf t").and_return("")
-      @device.should_receive(:execute).with("zone name Demo_Zone1 vsan 999").and_return("")
+      @device.should_receive(:execute).with("zone name #{zoneforupdate[:name]} vsan #{zoneforupdate[:vsanid]}").and_return("")
       @device.should_receive(:execute).twice
       @device.should_receive(:execute).twice.with("exit")
       @device.should_receive(:disconnect)
@@ -51,10 +51,10 @@ describe Puppet::Type.type(:zone).provider(:cisconexus5k) do
       @transport.should_receive(:handles_login?).and_return(true)
       @transport.should_receive(:command).once.with("terminal length 0")
       @device.should_receive(:execute).with("conf t").and_return("")
-      @device.should_receive(:execute).with("zone name Demo_Zone1 vsan 999").and_return("")
+      @device.should_receive(:execute).with("zone name #{zoneforupdate[:name]} vsan #{zoneforupdate[:vsanid]}").and_return("")
       @device.should_receive(:execute).twice
-      @device.should_receive(:execute).with("show zone name Demo_Zone1 vsan 999").and_return(" \n \n \n")
-      @device.should_receive(:execute).with("no zone name Demo_Zone1 vsan 999").and_return("")
+      @device.should_receive(:execute).with("show zone name #{zoneforupdate[:name]} vsan #{zoneforupdate[:vsanid]}").and_return(" \n \n \n")
+      @device.should_receive(:execute).with("no zone name #{zoneforupdate[:name]} vsan #{zoneforupdate[:vsanid]}").and_return("")
       @device.should_receive(:execute).twice.with("exit")
       @device.should_receive(:disconnect)
 
