@@ -8,7 +8,7 @@ Puppet::Type.newtype(:alias) do
   apply_to_device
   ensurable
 
-  newparam(:aliasname) do
+  newparam(:name) do
     desc "The string type alias name."
     isnamevar
     newvalues(/^\S+/)
