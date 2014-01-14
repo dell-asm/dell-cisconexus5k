@@ -3,8 +3,6 @@ class Alias_fixture
   def initialize
   end
 
-  #private
-
   def  get_dataforcreatealias
      Puppet::Type.type(:alias).new(
            :name                           => 'hostwwpn',

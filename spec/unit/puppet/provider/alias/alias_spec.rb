@@ -5,8 +5,8 @@ require 'puppet/provider/cisconexus5k'
 require 'spec_helper'
 require 'yaml'
 require 'fixtures/unit/puppet/provider/alias/alias_fixture'
-#require 'rspec/expectations'
 
+#require 'rspec/expectations'
 
 describe Puppet::Type.type(:alias).provider(:cisconexus5k) do
 
@@ -16,22 +16,21 @@ describe Puppet::Type.type(:alias).provider(:cisconexus5k) do
     @transport = double('transport')
     @device.transport = @transport
   end
-    let :aliasforcreate do
-      Alias_fixture.new.get_dataforcreatealias
-    end
+  let :aliasforcreate do
+    Alias_fixture.new.get_dataforcreatealias
+  end
 
- let :aliasfordelete do
-      Alias_fixture.new.get_datafordeletealias
-    end
+  let :aliasfordelete do
+    Alias_fixture.new.get_datafordeletealias
+  end
 
-    let :providerforcreate do
-        described_class.new(@device,aliasforcreate)
-    end
+  let :providerforcreate do
+    described_class.new(@device,aliasforcreate)
+  end
 
- let :providerfordelete do
-        described_class.new(@device,aliasfordelete)
-    end
-
+  let :providerfordelete do
+    described_class.new(@device,aliasfordelete)
+  end
 
   describe "when updating aliass." do
     it "should create alias" do
@@ -43,9 +42,9 @@ describe Puppet::Type.type(:alias).provider(:cisconexus5k) do
       @device.should_receive(:execute).with("device-alias database").and_return("")
       @device.should_receive(:execute).once.with("device-alias name  #{aliasforcreate[:name]} pwwn #{aliasforcreate[:member]}")
       @device.should_receive(:execute).once.with("device-alias commit")
-      @device.should_receive(:execute).twice.with("exit")     
-      @device.should_receive(:disconnect) 
-      
+      @device.should_receive(:execute).twice.with("exit")
+      @device.should_receive(:disconnect)
+
       providerforcreate.flush
     end
 
@@ -64,6 +63,5 @@ describe Puppet::Type.type(:alias).provider(:cisconexus5k) do
     end
 
   end
-    
 
 end

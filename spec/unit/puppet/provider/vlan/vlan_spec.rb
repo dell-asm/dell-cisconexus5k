@@ -81,7 +81,7 @@ describe Puppet::Type.type(:vlan).provider(:cisconexus5k) do
       @device.should_receive(:execute).with("conf t").and_return("")
       @device.should_receive(:execute).with("interface #{vlanfordelete[:interface]}").and_return("")
       @device.should_receive(:execute).with("show interface #{vlanfordelete[:interface]} trunk").and_return("")
-      @device.should_receive(:gettrunkinterfacestatus).with("").and_return("trunking")      
+      @device.should_receive(:gettrunkinterfacestatus).with("").and_return("trunking")
       @device.should_receive(:execute).with("no switchport trunk native vlan #{vlanfordelete[:nativevlanid]}").and_return("")
       @device.should_receive(:execute).with("switchport trunk allowed vlan remove #{vlanfordelete[:name]}").and_return("")
       @device.should_receive(:execute).with("no switchport mode trunk").and_return("")
