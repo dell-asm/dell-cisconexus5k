@@ -62,7 +62,7 @@ describe Puppet::Type.type(:alias) do
                     it "should support present value" do
                         described_class.new(:name => alias_attrib['name'],
                         :ensure                         => alias_attrib['ensure'],
-                        :member                         => alias_attrib['member'])[:ensure].should == :present 
+                        :member                         => alias_attrib['member'])[:ensure].should == (alias_attrib['ensure'] == 'present' ? :present : (alias_attrib['ensure'] == 'absent' ? :absent : alias_attrib['ensure']))
                     end
                     it "should not allow values other than present or absent" do
                         expect { described_class.new(:name => alias_attrib['name'],
