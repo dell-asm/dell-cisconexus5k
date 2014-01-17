@@ -79,6 +79,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
     fiberchannel_interface_count = 0
     for line in interface_res.split("\n")
       if ( line =~ /^Eth(\d+)/ )
+        ethernet_interface_count = ethernet_interface_count + 1
         res = line.split(" ")
         interface_name = res[0]
         length = res.length
@@ -118,7 +119,11 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
       facts[:chassisserialnumber] = $1
     end
     # since we can communicate with the switch, set status to online
+    # TODO: Find a method to get status programmatically
+    facts[:ethernet_interface_count] = ethernet_interface_count
+    facts[:fiberchannel_interface_count] = fiberchannel_interface_count
     facts[:status] = "online"
+    facts[:manufacturer] = "Cisco"
     #pp facts
     return facts
   end
