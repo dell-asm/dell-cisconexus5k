@@ -3,6 +3,7 @@ require 'puppet'
 require 'puppet/util'
 require 'puppet/util/network_device/base_nxos'
 require 'puppet/util/network_device/cisconexus5k/facts'
+require '/etc/puppetlabs/puppet/modules/asm_lib/lib/security/encode'
 
 #
 # Main device class for Cisco nexus5k module
@@ -64,7 +65,8 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     else
       transport.expect(/^Password:/)
     end
-    transport.command(@url.password)
+	password = URI.decode(asm_decrypt(@url.password))
+    transport.command(password)
   end
 
   def enable
