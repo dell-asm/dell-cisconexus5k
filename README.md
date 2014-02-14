@@ -12,6 +12,8 @@
 
 The cisconexus5k module allows the user to manage VLANs, aliases, zones and zonesets on a Cisco Nexus 5000 series switch. The module uses net-ssh and net-telnet to communicate with the switch.
 
+This module was developed by Dell which is why the name of the repo starts with dell-.   The name dell-cisconexus5k does not imply a partnership, agreement or other special relationship between Dell and Cisco.
+
 ##VLAN
 
 ###Description
