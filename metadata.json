@@ -1,0 +1,240 @@
+{
+  "summary": "Module for Cisco Nexus 5k",
+  "author": "Dell",
+  "description": "This module supports functionality to manage a Cisco Nexus 5k switch/router. The operations supported are create/delete VLANs, create/delete zones, create/delete zonesets and create/delete aliases",
+  "dependencies": [],
+  "types": [
+    {
+      "properties": [
+        {
+          "name": "member",
+          "doc": "Member WWPN - supported format XX:XX:XX:XX:XX:XX:XX:XX  "
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "The string type alias name."
+        }
+      ],
+      "providers": [
+        {
+          "name": "cisconexus5k",
+          "doc": "Cisco switch/router provider for vlans."
+        }
+      ],
+      "name": "alias",
+      "doc": "Manages an alias"
+    },
+    {
+      "properties": [
+        {
+          "name": "vsanid",
+          "doc": "vsanid"
+        },
+        {
+          "name": "membertype",
+          "doc": "member type"
+        },
+        {
+          "name": "member",
+          "doc": "member wwpn"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "Zone name."
+        }
+      ],
+      "providers": [
+        {
+          "name": "cisconexus5k",
+          "doc": "Cisco switch/router provider for zone."
+        }
+      ],
+      "name": "cisconexus5k_zone",
+      "doc": "Manages a ZONE on a router or switch."
+    },
+    {
+      "properties": [
+        {
+          "name": "vsanid",
+          "doc": "The VSAN id."
+        },
+        {
+          "name": "member",
+          "doc": "member zones"
+        },
+        {
+          "name": "active",
+          "doc": "Activate/deavtivate a Zoneset. Default value is \"false\""
+        },
+        {
+          "name": "force",
+          "doc": "Forcefully activates a Zoneset on a given vSAN. Default value is \"false\""
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "The zoneset name. Valid characters are a-z, 1-9 \u0026 underscore."
+        }
+      ],
+      "providers": [
+        {
+          "name": "cisconexus5k",
+          "doc": "Cisco switch/router provider for ZoneSet."
+        }
+      ],
+      "name": "cisconexus5k_zoneset",
+      "doc": "Manage Cisco nexus zoneset creation, modification and deletion."
+    },
+    {
+      "properties": [
+        {
+          "name": "vlanname",
+          "doc": "VLAN name."
+        },
+        {
+          "name": "istrunkforinterface",
+          "doc": "Trunking is true or false for interface."
+        },
+        {
+          "name": "interface",
+          "doc": "The interface name."
+        },
+        {
+          "name": "interfaceoperation",
+          "doc": "The interface operation."
+        },
+        {
+          "name": "interfaceencapsulationtype",
+          "doc": "Encapsulationtype for interface."
+        },
+        {
+          "name": "isnative",
+          "doc": "The interface is associated with native vlan or not"
+        },
+        {
+          "name": "nativevlanid",
+          "doc": "The native vlan id."
+        },
+        {
+          "name": "removeallassociatedvlans",
+          "doc": "Remove all associated vlans or not."
+        },
+        {
+          "name": "deletenativevlaninformation",
+          "doc": "Delete native vlan information or not."
+        },
+        {
+          "name": "unconfiguretrunkmode",
+          "doc": "Un configure trunk mode or not."
+        },
+        {
+          "name": "shutdownswitchinterface",
+          "doc": "Shutdown switch interface or or not."
+        },
+        {
+          "name": "portchannel",
+          "doc": "Port channel number."
+        },
+        {
+          "name": "portchanneloperation",
+          "doc": "The port channel operation."
+        },
+        {
+          "name": "istrunkforportchannel",
+          "doc": "Trunking is true or false for portchannel."
+        },
+        {
+          "name": "portchannelencapsulationtype",
+          "doc": "Encapsulationtype for portchannel."
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "The numeric VLAN ID."
+        }
+      ],
+      "providers": [
+        {
+          "name": "cisconexus5k",
+          "doc": "Cisco switch/router provider for vlans."
+        }
+      ],
+      "name": "vlan",
+      "doc": "Manages a VLAN."
+    },
+    {
+      "properties": [
+        {
+          "name": "vsanid",
+          "doc": "vsanid"
+        },
+        {
+          "name": "membertype",
+          "doc": "member type"
+        },
+        {
+          "name": "member",
+          "doc": "member wwpn"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "Zone name."
+        }
+      ],
+      "providers": [
+        {
+          "name": "cisconexus5k",
+          "doc": "Cisco switch/router provider for zone."
+        }
+      ],
+      "name": "zone",
+      "doc": "Manages a ZONE on a router or switch."
+    },
+    {
+      "properties": [
+        {
+          "name": "vsanid",
+          "doc": "The VSAN id."
+        },
+        {
+          "name": "member",
+          "doc": "member zones"
+        },
+        {
+          "name": "active",
+          "doc": "Activate/deavtivate a Zoneset. Default value is \"false\""
+        },
+        {
+          "name": "force",
+          "doc": "Forcefully activates a Zoneset on a given vSAN. Default value is \"false\""
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "The zoneset name. Valid characters are a-z, 1-9 \u0026 underscore."
+        }
+      ],
+      "providers": [
+        {
+          "name": "cisconexus5k",
+          "doc": "Cisco switch/router provider for ZoneSet."
+        }
+      ],
+      "name": "zoneset",
+      "doc": "Manage Cisco nexus zoneset creation, modification and deletion."
+    }
+  ],
+  "checksums": {},
+  "source": "",
+  "project_page": "",
+  "license": ""
+}
