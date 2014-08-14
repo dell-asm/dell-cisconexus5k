@@ -118,12 +118,45 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
     if ( out =~ /NAME:\s+"Chassis",\s+DESCR:.*\n.*SN:\s+(\S+)/ )
       facts[:chassisserialnumber] = $1
     end
+    
+    # Get FLOGI information
+    out = @transport.command("show flogi database")
+    flogi_info = []
+    fc_interfaces = out.scan(/^(fc\d+\/\d+)\s*(\d+)\s+(\S+)\s+(\S+)\s+(\S+)/m)
+    vfc_interfaces = out.scan(/^(vfc\d+)\s*(\d+)\s+(\S+)\s+(\S+)\s+(\S+)/)
+    if fc_interfaces
+      fc_interfaces.each do |fc_interface|
+        flogi_info.push(fc_interface)
+      end
+    end
+    if vfc_interfaces
+      vfc_interfaces.each do |vfc_interface|
+        flogi_info.push(vfc_interface)
+      end
+    end
+    
+    # Name Server Information
+    nameserver_info = []
+    out = @transport.command('show fcns database detail')
+    ns_info = out.scan(/VSAN:(\d+)\s+FCID:(\S+).*?port-wwn\s+\(vendor\)\s+:(\S+).*?node-wwn\s+:(\S+).*?symbolic-port-name\s+:(.*?)port-type/m)
+    if ns_info
+      nameserver_info = ns_info
+    end
+    # Get VSAN information
+    vsan_zoneset_info = []
+    out = @transport.command('show zoneset active')
+    vsan_zoneset_info = out.scan(/^zoneset\s+name\s*(\S+)\s+vsan\s+(\d+)/)
+    
+    # Get VSAN Zoneset information
     # since we can communicate with the switch, set status to online
     # TODO: Find a method to get status programmatically
     facts[:ethernet_interface_count] = ethernet_interface_count
     facts[:fiberchannel_interface_count] = fiberchannel_interface_count
     facts[:status] = "online"
     facts[:manufacturer] = "Cisco"
+    facts[:flogi_info] = flogi_info
+    facts[:nameserver_info] = nameserver_info
+    facts[:vsan_zoneset_info] = vsan_zoneset_info
     #pp facts
     return facts
   end
