@@ -29,6 +29,84 @@
     {
       "properties": [
         {
+          "name": "vlanname",
+          "doc": "VLAN name."
+        },
+        {
+          "name": "istrunkforinterface",
+          "doc": "Trunking is true or false for interface."
+        },
+        {
+          "name": "interface",
+          "doc": "The interface name."
+        },
+        {
+          "name": "interfaceoperation",
+          "doc": "The interface operation."
+        },
+        {
+          "name": "interfaceencapsulationtype",
+          "doc": "Encapsulationtype for interface."
+        },
+        {
+          "name": "isnative",
+          "doc": "The interface is associated with native vlan or not"
+        },
+        {
+          "name": "nativevlanid",
+          "doc": "The native vlan id."
+        },
+        {
+          "name": "removeallassociatedvlans",
+          "doc": "Remove all associated vlans or not."
+        },
+        {
+          "name": "deletenativevlaninformation",
+          "doc": "Delete native vlan information or not."
+        },
+        {
+          "name": "unconfiguretrunkmode",
+          "doc": "Un configure trunk mode or not."
+        },
+        {
+          "name": "shutdownswitchinterface",
+          "doc": "Shutdown switch interface or or not."
+        },
+        {
+          "name": "portchannel",
+          "doc": "Port channel number."
+        },
+        {
+          "name": "portchanneloperation",
+          "doc": "The port channel operation."
+        },
+        {
+          "name": "istrunkforportchannel",
+          "doc": "Trunking is true or false for portchannel."
+        },
+        {
+          "name": "portchannelencapsulationtype",
+          "doc": "Encapsulationtype for portchannel."
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "The numeric VLAN ID."
+        }
+      ],
+      "providers": [
+        {
+          "name": "cisconexus5k",
+          "doc": "Cisco switch/router provider for vlans."
+        }
+      ],
+      "name": "cisconexus5k_vlan",
+      "doc": "Manages a VLAN."
+    },
+    {
+      "properties": [
+        {
           "name": "vsanid",
           "doc": "vsanid"
         },
