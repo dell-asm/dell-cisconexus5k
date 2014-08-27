@@ -147,6 +147,37 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
     out = @transport.command('show zoneset active')
     vsan_zoneset_info = out.scan(/^zoneset\s+name\s*(\S+)\s+vsan\s+(\d+)/)
     
+    # Remote LLDP information from the switch
+    lldp_info = []
+    out = @transport.command('show lldp  neighbors')
+    lldp_info = out.scan(/^([a-f0-9\.]+)\s+(\S+)/m)
+    remote_device_info = {}
+    if !lldp_info.empty?
+      lldp_info.each do |lldp_entry|
+        remote_device = { :interface => lldp_entry[1].strip, :remote_mac => lldp_entry[0].strip}
+        remote_device_info[remote_device[:interface]] = remote_device
+      end
+    end
+    
+    # Port channel information
+    out = @transport.command('show port-channel summary')
+    port_channel_out = out.scan(/^(\d+)\s+(Po\d+).*?LACP\s+(.*?)$/m)
+    port_channels = {}
+    if !port_channel_out.empty?
+      port_channel_out.each do |port_channel|
+        port_channel = { :port_channel => port_channel[0].strip, :name => port_channel[1].strip ,:ports => port_channel[2].strip }
+        port_channels[port_channel[:port_channel]] = port_channel
+      end
+    end
+    
+    # Feature list enabled on the switch
+    out = @transport.command('show running-config | inc feature')
+    features = out.scan(/^feature\s+(\S+)$/m)
+    configured_features= []
+    if !features.empty?
+      features.map {|x| configured_features.push(x[0])}
+    end
+    
     # Get VSAN Zoneset information
     # since we can communicate with the switch, set status to online
     # TODO: Find a method to get status programmatically
@@ -157,6 +188,9 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
     facts[:flogi_info] = flogi_info
     facts[:nameserver_info] = nameserver_info
     facts[:vsan_zoneset_info] = vsan_zoneset_info
+    facts[:remote_device_info] = remote_device_info.to_json
+    facts[:port_channels] = port_channels.to_json
+    facts[:features] = configured_features
     #pp facts
     return facts
   end
