@@ -50,9 +50,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     connect
     out = execute(cmd) if cmd
     yield self if block_given?
-    #disconnect
-    Puppet.debug("Command: #{cmd}")
-    Puppet.debug("Output: #{out}")
+    disconnect
     out
   end
 
