@@ -178,6 +178,18 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
       features.map {|x| configured_features.push(x[0])}
     end
     
+    # VSAN Membership
+    out = @transport.command("show vsan")
+    vsans = ( out.scan(/^vsan\s+(\d+)\s+/) || [] ).flatten
+    vsan_info = {}
+    vsans.each do |vsan|
+      out = @transport.command("show vsan #{vsan} membership")
+      members = ( out.scan(/(fc\d+\/\d+|vfc\d+|san-port-channel\s+\d+)/) || [] ).flatten
+      if !members.empty?
+        vsan_info[vsan] = members
+      end
+    end
+    
     # Get VSAN Zoneset information
     # since we can communicate with the switch, set status to online
     # TODO: Find a method to get status programmatically
@@ -191,6 +203,7 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
     facts[:remote_device_info] = remote_device_info.to_json
     facts[:port_channels] = port_channels.to_json
     facts[:features] = configured_features
+    facts[:vsan_member_info] = vsan_info
     #pp facts
     return facts
   end

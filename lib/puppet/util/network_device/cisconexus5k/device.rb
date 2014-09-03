@@ -136,6 +136,33 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     end
     vlans
   end
+  
+  def parse_vsans
+    vsan_info = {}
+    vsan_res = execute("show vsan")
+    vsans = ( vsan_res.scan(/^vsan\s+(\d+)\s+/i) || [] ).flatten
+    vsans.each do |vsan|
+      vsan_membership = execute("show vsan #{vsan} membership")
+      vsan_info[vsan] = vsan_membership.scan(/(fc\d+\/\d+|vfc\d+|san-port-channel\s+\d+)/).flatten
+    end
+    vsan_info
+  end
+  
+  def parse_vfc_interfaces
+    vfc_interfaces = {}
+    out = execute("show interface brief")
+    vfc_interfaces_info = out.scan(/^vfc\s+(\d+)\s+(\d+)\s+\S+\s+(\S+)\s+(\S+)/)
+    if vfc_interfaces_info.empty?
+      vfc_interfaces_info.each do vfc_interface_info
+        vfc_interfaces = {:name =>  vfc_interface_info[0], 
+          :vsan => vfc_interface_info[1], 
+          :admin_mode => vfc_interface_info[2], 
+          :admin_trunk_mode => vfc_interface_info[3], 
+          :status => vfc_interface_info[4]}
+      end
+    end
+    vfc_interfaces
+  end
 
   def parse_zones
     zones = {}
@@ -384,6 +411,82 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
     end
     execute("exit")
     execute("exit")
+    return
+  end
+
+
+        
+  def update_vfc_interface(id, is = {}, should = {}, bind_interface = {}, bind_macaddress={}, shutdown = {}, ensureabsent = ':absent')
+    Puppet.debug("Performing the vfc interfaces update for Cisco Nexus")
+
+    if should[:ensure] == :absent || ensureabsent == :absent
+      Puppet.info "The interface #{interfaceid} is being removed from the vfc #{id}."
+      execute("conf t")
+      execute("no interface vfc #{interfaceid}")
+      execute("exit")
+      return
+    end
+
+    # We're creating or updating an entry
+    execute("conf t")
+    execute("interface vfc #{id}")
+    if !bind_interface.empty?
+      execute("bind interface #{bind_interface}")
+    end
+
+    if !bind_macaddress.empty?
+      execute("bind macaddress vfc #{bind_interface}")
+    end
+
+    Puppet.debug("Value of shutdown: '#{shutdown}'")
+    if shutdown == :false
+      execute("no shutdown")
+    else
+      execute("shutdown")
+    end
+    
+    execute("exit")
+    return
+  end
+
+  def update_vsan(id, is = {}, should = {}, vsanname = {}, membership = {} , membershipoperation = {} , fcoemap = {} , ensureabsent = ":absent")
+    Puppet.debug("Performing the vsan update for Cisco Nexus")
+
+    if should[:ensure] == :absent || ensureabsent == :absent
+      Puppet.info "Removing VSAN #{id}."
+      execute("conf t")
+      execute("vsan database")
+      execute("no vsan #{interfaceid}")
+      execute("y")
+      execute("exit")
+      return
+    end
+
+    # We're creating or updating an entry
+    execute("conf t")
+    execute("vsan database")
+    execute("vsan #{id}")
+    if !vsanname.empty?
+      execute("vsan #{id} name #{vsanname}")
+    end
+    
+    if !membership.empty?
+      members = ( membership.split(';') || [] )
+      members.each do |member|
+        if membershipoperation == 'add'
+          execute("vsan #{id} interface #{member}")
+        else
+          execute("vsan 1 member interface #{member}")
+        end
+      end
+    end
+    
+    if !fcoemap.empty?
+      execute("fcoe fcmap #{fcoemap}")
+      execute("y")
+    end
+    
+    execute("end")
     return
   end
 
