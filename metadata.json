@@ -30,6 +30,36 @@
     {
       "properties": [
         {
+          "name": "bind_interface",
+          "doc": "interface that needs to be binded to the VFC"
+        },
+        {
+          "name": "bind_macaddress",
+          "doc": "MAC Address that needs to be binded to the VFC"
+        },
+        {
+          "name": "shutdown",
+          "doc": "Shutdown state of the vfc interface"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "VFC Interface name."
+        }
+      ],
+      "providers": [
+        {
+          "name": "cisconexus5k",
+          "doc": "Cisco Nexus provider for vfc interface."
+        }
+      ],
+      "name": "cisconexus5k_vfc",
+      "doc": "Manages a vfc interface for Cisco Nexus switch."
+    },
+    {
+      "properties": [
+        {
           "name": "vlanname",
           "doc": "VLAN name."
         },
@@ -104,6 +134,40 @@
       ],
       "name": "cisconexus5k_vlan",
       "doc": "Manages a VLAN."
+    },
+    {
+      "properties": [
+        {
+          "name": "vsanname",
+          "doc": "VSAN description."
+        },
+        {
+          "name": "membership",
+          "doc": "Members that needs to be added / removed from VSAN"
+        },
+        {
+          "name": "membershipoperation",
+          "doc": "VSAN Membership operation add / delete."
+        },
+        {
+          "name": "fcoemap",
+          "doc": "FC MAP Id that needs to be associated with VSAN"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "doc": "The numeric VSAN ID."
+        }
+      ],
+      "providers": [
+        {
+          "name": "cisconexus5k",
+          "doc": "Cisco switch/router provider for vsan."
+        }
+      ],
+      "name": "cisconexus5k_vsan",
+      "doc": "Manages a VSAN."
     },
     {
       "properties": [
