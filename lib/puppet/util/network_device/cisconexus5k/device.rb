@@ -399,6 +399,10 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
         Puppet.info("A switch interface with a native VLAN is being configured.")
         Puppet.debug("Command: 'switchport trunk native vlan #{nativevlanid}'")
         execute("switchport trunk native vlan #{nativevlanid}")
+      elsif isnative == "false"
+        Puppet.info("Need to remove the vative vlan configuration.")
+        Puppet.debug("Command: 'no switchport trunk native vlan #{nativevlanid}'")
+        execute("no switchport trunk native vlan #{nativevlanid}")
       end
       execute("switchport trunk allowed vlan add #{id}")
       execute("no shutdown")
