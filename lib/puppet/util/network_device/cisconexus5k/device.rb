@@ -61,12 +61,20 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Device < Puppet::Util::NetworkD
 
   def login
     return if transport.handles_login?
-    if @url.user != ''
-      transport.command(@url.user, :prompt => /^Password:/)
+
+    if cred = credential
+      user = cred.username
+      password = cred.password
+    else
+      user = @url.user
+      password = URI.decode(asm_decrypt(@url.password))
+    end
+
+    if user != ''
+      transport.command(user, :prompt => /^Password:/)
     else
       transport.expect(/^Password:/)
     end
-    password = URI.decode(asm_decrypt(@url.password))
     transport.command(password)
   end
 
