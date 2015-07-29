@@ -2,8 +2,6 @@ require 'puppet/util/autoload'
 require 'uri'
 require 'puppet/util/network_device/transport'
 require 'puppet/util/network_device/transport/base'
-require '/etc/puppetlabs/puppet/modules/asm_lib/lib/security/encode'
-
 
 class Puppet::Util::NetworkDevice::Base_nxos
 
