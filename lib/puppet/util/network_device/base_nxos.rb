@@ -21,8 +21,8 @@ class Puppet::Util::NetworkDevice::Base_nxos
       @transport = Puppet::Util::NetworkDevice::Transport.const_get(@url.scheme.capitalize).new(options[:debug])
       @transport.host = @url.host
       @transport.port = @url.port || case @url.scheme ; when "ssh" ; 22 ; when "telnet" ; 23 ; end
-      @transport.user = URI.decode(@url.user)
-      @transport.password = URI.decode(@url.password)
+      @transport.user = URI.decode(@url.user) if @url.user
+      @transport.password = URI.decode(@url.password) if @url.password
 
       override_using_credential_id
     end
