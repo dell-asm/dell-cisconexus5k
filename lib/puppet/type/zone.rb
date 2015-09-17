@@ -6,7 +6,7 @@
 Puppet::Type.newtype(:zone) do
   @doc = "Manages a ZONE on a router or switch."
 
-  apply_to_device
+  #apply_to_device
 
   ensurable
 

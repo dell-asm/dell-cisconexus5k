@@ -6,7 +6,7 @@
 Puppet::Type.newtype(:cisconexus5k_zone) do
   @doc = "Manages a ZONE on a router or switch."
 
-  apply_to_device
+  #apply_to_device
 
   ensurable
 

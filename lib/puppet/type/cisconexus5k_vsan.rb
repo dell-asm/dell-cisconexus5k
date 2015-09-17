@@ -6,7 +6,7 @@
 Puppet::Type.newtype(:cisconexus5k_vsan) do
   @doc = "Manages a VSAN."
 
-  apply_to_device
+  #apply_to_device
 
   ensurable
 

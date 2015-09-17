@@ -5,7 +5,7 @@
 
 Puppet::Type.newtype(:alias) do
   @doc = "Manages an alias"
-  apply_to_device
+  #apply_to_device
   ensurable
 
   newparam(:name) do

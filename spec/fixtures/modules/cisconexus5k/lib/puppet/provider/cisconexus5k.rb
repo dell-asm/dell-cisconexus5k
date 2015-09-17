@@ -1,4 +1,4 @@
-require 'puppet/util/network_device/cisconexus5k/device'
+require 'puppet_x/cisconexus5k/transport'
 require 'puppet/provider/network_device'
 
 # This is the base class of all prefetched cisco device providers

@@ -5,21 +5,18 @@ Puppet::Type.type(:cisconexus5k_vfc).provide :cisconexus5k, :parent => Puppet::P
   desc "Cisco Nexus provider for vfc interface."
 
   mk_resource_methods
-  def self.lookup(device, id)
+
+  def self.get_current(name)
     vfc_interfaces = {}
-    device.command do |dev|
+    transport.command do |dev|
       vfc_interfaces = dev.parse_vfc_interfaces || {}
     end
-    vfc_interfaces[id]
-  end
-
-  def initialize(device, *args)
-    super
+    vfc_interfaces[name]
   end
 
   # Clear out the cached values.
   def flush
-    device.command do |dev|
+    transport.command do |dev|
       bind_interface = ( resource[:bind_interface] || '' )
       bind_macaddress = ( resource[:bind_macaddress] || '')
       shutdown = ( resource[:shutdown] || 'false')

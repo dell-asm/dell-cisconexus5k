@@ -5,21 +5,18 @@ Puppet::Type.type(:zoneset).provide :cisconexus5k , :parent => Puppet::Provider:
   desc "Cisco switch/router provider for ZoneSet."
 
   mk_resource_methods
-  def self.lookup(device, id)
+
+  def self.get_current(name)
     zonesets = {}
-    device.command do |dev|
+    transport.command do |dev|
       zonesets = dev.parse_zonesets || {}
     end
-    zonesets[id]
-  end
-
-  def initialize(device, *args)
-    super
+    zonesets[name]
   end
 
   # Clear out the cached values.
   def flush
-    device.command do |dev|
+    transport.command do |dev|
       dev.update_zoneset(resource[:name], former_properties, properties, resource[:member], resource[:active], resource[:force], resource[:vsanid], resource[:ensure])
     end
     super

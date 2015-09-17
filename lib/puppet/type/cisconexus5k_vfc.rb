@@ -6,7 +6,7 @@
 Puppet::Type.newtype(:cisconexus5k_vfc) do
   @doc = "Manages a vfc interface for Cisco Nexus switch."
 
-  apply_to_device
+  #apply_to_device
 
   ensurable
 
