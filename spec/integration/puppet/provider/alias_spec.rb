@@ -1,6 +1,6 @@
 #! /usr/bin/env ruby
 provider_path = Pathname.new(__FILE__).parent.parent
-require 'puppet/util/network_device/cisconexus5k/device'
+require 'puppet_x/cisconexus5k/transport'
 require 'puppet/provider/cisconexus5k'
 require 'spec_helper'
 require 'yaml'

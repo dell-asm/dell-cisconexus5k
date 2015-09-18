@@ -1,13 +1,13 @@
 require 'pp'
 require 'json'
-require 'puppet/util/network_device/cisconexus5k'
+require 'puppet_x/cisconexus5k/cisconexus5k'
 require 'puppet/util/network_device/ipcalc'
 
 #
 # This retrieves facts from a cisco device
 #
 
-class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
+class PuppetX::Cisconexus5k::Facts
 
   attr_reader :transport
   def initialize(transport)
@@ -94,12 +94,20 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
         end
 
         out = @transport.command("show interface #{interface_name} mac-address")
+        
+        #puts "====>output: #{out}  ====?interface name: #{interface_name} ===="
+
+        
         lines = out.split("\n")
         lines.shift; lines.shift; lines.shift; lines.shift; lines.shift; lines.pop
-        line = lines[0].split(" ")
-        mac_address = line[2]
-        fact = { :interface_name => res[0], :type => res[2], :mode => res[3], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1], :reason => res[5..length - 3], :tagged_vlan => taggedvlan, :untagged_vlan => untaggedvlan, :macaddress => mac_address }
-        facts[fact[:interface_name]] = fact
+
+        #puts ("line =====> #{lines}")
+        unless lines[0].nil?
+          line = lines[0].split(" ")
+          mac_address = line[2]
+          fact = { :interface_name => res[0], :type => res[2], :mode => res[3], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1], :reason => res[5..length - 3], :tagged_vlan => taggedvlan, :untagged_vlan => untaggedvlan, :macaddress => mac_address }
+          facts[fact[:interface_name]] = fact
+        end
       end
       if ( line =~ /^fc(\d+)/ )
         fiberchannel_interface_count = fiberchannel_interface_count + 1

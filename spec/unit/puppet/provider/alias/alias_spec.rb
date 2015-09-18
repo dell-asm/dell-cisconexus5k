@@ -1,6 +1,6 @@
 #! /usr/bin/env ruby
 provider_path = Pathname.new(__FILE__).parent.parent
-require 'puppet/util/network_device/cisconexus5k/device'
+require 'puppet_x/cisconexus5k/transport'
 require 'puppet/provider/cisconexus5k'
 require 'spec_helper'
 require 'yaml'
@@ -12,7 +12,7 @@ describe Puppet::Type.type(:alias).provider(:cisconexus5k) do
 
   before(:each) do
     my_url = 'ssh://admin:p!ssw0rd@172.17.7.15:22/'
-    @device = Puppet::Util::NetworkDevice::Cisconexus5k::Device.new(my_url)
+    @device = PuppetX::Cisconexus5k::Transport.new(my_url)
     @transport = double('transport')
     @device.transport = @transport
   end

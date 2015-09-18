@@ -5,21 +5,18 @@ Puppet::Type.type(:cisconexus5k_vsan).provide :cisconexus5k, :parent => Puppet::
   desc "Cisco switch/router provider for vsan."
 
   mk_resource_methods
-  def self.lookup(device, id)
-    vsans = {}
-    device.command do |dev|
+
+  def self.get_current(name)
+    vlans = {}
+    transport.command do |dev|
       vlans = dev.parse_vsans || {}
     end
-    vsans[id]
-  end
-
-  def initialize(device, *args)
-    super
+    vlans[name]
   end
 
   # Clear out the cached values.
   def flush
-    device.command do |dev|
+    transport.command do |dev|
       vsanname = (resource[:vsanname] || '' )
       membership = ( resource[:membership] || '' )
       membershipoperation = (resource[:membershipoperation] || 'add' )

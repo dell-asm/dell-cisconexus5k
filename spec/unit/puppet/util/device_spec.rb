@@ -1,23 +1,23 @@
 #! /usr/bin/env ruby
 #provider_path = Pathname.new(__FILE__).parent.parent
 require 'puppet/provider/cisconexus5k'
-require 'puppet/util/network_device/cisconexus5k/device'
+require 'puppet_x/cisconexus5k/transport'
 require 'spec_helper'
 require 'yaml'
 require 'fixtures/unit/puppet/util/device_fixture'
 
-describe Puppet::Util::NetworkDevice::Cisconexus5k::Device do
+describe PuppetX::Cisconexus5k::Transport do
 
   before(:each) do
     @transport = double('transport')
     my_url = 'ssh://admin:p!ssw0rd@172.17.7.15:22/'
-    @cisco = Puppet::Util::NetworkDevice::Cisconexus5k::Device.new(my_url)
+    @cisco = PuppetX::Cisconexus5k::Transport.new(my_url)
     @cisco.transport = @transport
   end
 
   describe 'when creating the device.' do
     it 'should find the enable password from the url.' do
-      cisco = Puppet::Util::NetworkDevice::Cisconexus5k::Device.new('ssh://admin:p!ssw0rd@172.17.7.15:22/?enable=enable_password')
+      cisco = PuppetX::Cisconexus5k::Transport.new('ssh://admin:p!ssw0rd@172.17.7.15:22/?enable=enable_password')
       cisco.enable_password == 'enable_password'
     end
   end
@@ -45,7 +45,7 @@ describe Puppet::Util::NetworkDevice::Cisconexus5k::Device do
     end
 
     it "should have parent 'Puppet::Util::NetworkDevice::Base_nxos'" do
-      @cisco.should be_kind_of(Puppet::Util::NetworkDevice::Base_nxos)
+      @cisco.should be_kind_of(PuppetX::Cisconexus5k::Transport
     end
   end
 

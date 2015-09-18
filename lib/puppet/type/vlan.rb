@@ -6,7 +6,7 @@
 Puppet::Type.newtype(:vlan) do
   @doc = "Manages a VLAN."
 
-  apply_to_device
+  #apply_to_device
 
   ensurable
 

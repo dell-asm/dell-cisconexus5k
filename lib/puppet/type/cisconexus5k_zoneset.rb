@@ -6,7 +6,7 @@
 Puppet::Type.newtype(:cisconexus5k_zoneset) do
   @doc = "Manage Cisco nexus zoneset creation, modification and deletion."
 
-  apply_to_device
+  #apply_to_device
 
   ensurable
 
