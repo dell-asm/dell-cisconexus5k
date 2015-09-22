@@ -189,6 +189,22 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
         vsan_info[vsan] = members
       end
     end
+
+    # fex information
+    out = @transport.command("show fex")
+    fex = ( out.scan(/^(\d+)/).flatten || [] )
+
+    fex_info = {}
+    fex.each do |f|
+      fex_info[f] = {}
+      out = @transport.command("show fex #{f} detail")
+      fex_info[f]['Extender Serial'] = out.scan(/^\s+Extender Serial:\s+(\S+)/).flatten.first
+      fex_info[f]['Service Tag'] = out.scan(/^\s+Service Tag:\s*(\S*)$/).flatten.first
+      fex_info[f]['Enclosure'] = out.scan(/^\s*Enclosure:\s*(.*)$/).flatten.first
+      fex_info[f]['Interfaces'] = out.scan(/^\s+(Eth#{f}\S+)/).flatten
+    end
+
+
     
     # Get VSAN Zoneset information
     # since we can communicate with the switch, set status to online
@@ -204,6 +220,8 @@ class Puppet::Util::NetworkDevice::Cisconexus5k::Facts
     facts[:port_channels] = port_channels.to_json
     facts[:features] = configured_features
     facts[:vsan_member_info] = vsan_info
+    facts[:fex] = fex
+    facts[:fex_info] = fex_info
     #pp facts
     return facts
   end
