@@ -221,6 +221,17 @@ class PuppetX::Cisconexus5k::Transport
     end
     vsan_info
   end
+
+  def parse_fexs
+    fex_info = {}
+    fex_res = execute("show fex")
+    fexs = ( fex_res.scan(/^(\d+)\s+(.*?)?\s+(\w+)\s+(\S+)\s+(\S+)$/i) || [] )
+    fexs.each do |fex|
+      fex_id = fex[0]
+      fex_info[fex_id] = {:name => fex_id, :description => fex[1], :status => fex[2], :model => fex[3], :serial_num => fex[4]}
+    end
+    fex_info
+  end
   
   def parse_vfc_interfaces
     vfc_interfaces = {}
@@ -236,6 +247,16 @@ class PuppetX::Cisconexus5k::Transport
       end
     end
     vfc_interfaces
+  end
+
+  def parse_install_features
+    install_features = {}
+    out = execute("show running-config | include 'install feature-set'")
+    features = ( out.scan(/^install feature-set\s+(\S+)/).flatten  || [] )
+    features.each do |f|
+        install_features[f] = { :name => f , :feature => f}
+    end
+    install_features
   end
 
   def parse_zones
@@ -493,7 +514,46 @@ class PuppetX::Cisconexus5k::Transport
   end
 
 
-        
+  def update_feature_set(id, is = {}, should = {}, feature_name = '', ensure_absent = ':absent')
+    if should[:ensure] == :absent || ensure_absent == :absent
+      Puppet.info "The feature set #{feature_name} is being removed from the switch."
+      execute('conf t')
+      execute("no install feature-set #{feature_name}")
+      execute('exit')
+      return
+    end
+
+    Puppet.debug("Configuring feature set #{feature_name}")
+    execute('conf t')
+    execute("install feature-set #{feature_name}")
+    execute("feature-set #{feature_name}")
+    execute('exit')
+    return
+  end
+
+  def update_fex(id, is = {}, should = {}, fcoe = {} , ensure_absent = ":absent")
+    Puppet.debug("Performing the vsan update for Cisco Nexus")
+
+    if should[:ensure] == :absent || ensure_absent == :absent
+      Puppet.info "Removing fex #{id}."
+      execute('conf t')
+      execute("no fex #{id}")
+      execute('exit')
+      return
+    end
+
+    # We're creating or updating an entry
+    execute('conf t')
+    execute("fex #{id}")
+
+    if !fcoe.empty?
+      execute("fcoe")
+    end
+
+    execute("end")
+    return
+  end
+
   def update_vfc_interface(id, is = {}, should = {}, bind_interface = {}, bind_macaddress={}, shutdown = {}, ensureabsent = ':absent')
     Puppet.debug("Performing the vfc interfaces update for Cisco Nexus")
 
