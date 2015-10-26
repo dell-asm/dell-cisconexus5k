@@ -126,7 +126,7 @@ class PuppetX::Cisconexus5k::Facts
     if ( out =~ /NAME:\s+"Chassis",\s+DESCR:.*\n.*SN:\s+(\S+)/ )
       facts[:chassisserialnumber] = $1
     end
-    
+
     # Get FLOGI information
     out = @transport.command("show flogi database")
     flogi_info = []
@@ -154,6 +154,9 @@ class PuppetX::Cisconexus5k::Facts
     vsan_zoneset_info = []
     out = @transport.command('show zoneset active')
     vsan_zoneset_info = out.scan(/^zoneset\s+name\s*(\S+)\s+vsan\s+(\d+)/)
+
+    # Adding show version command to clear the buffer prompts
+    out = @transport.command("show version")
     
     # Remote LLDP information from the switch
     lldp_info = []

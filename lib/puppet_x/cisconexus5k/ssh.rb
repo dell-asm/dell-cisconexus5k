@@ -8,7 +8,7 @@ module PuppetX
       #These switches require a carriage return as well, instead of just new line.  So we override Puppet's method to add \r
       def send(line, noop=false)
         Puppet.debug "SSH send: #{line}" if Puppet[:Debug]
-        @channel.send_data(line + "\n\r") unless noop
+        @channel.send_data(line + "\r") unless noop
       end
 
       def sendwithoutnewline(line, noop = false)
