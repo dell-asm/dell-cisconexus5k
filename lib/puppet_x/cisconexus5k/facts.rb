@@ -104,7 +104,7 @@ class PuppetX::Cisconexus5k::Facts
         #puts ("line =====> #{lines}")
         unless lines[0].nil?
           line = lines[0].split(" ")
-          mac_address = line[2]
+          mac_address = normalize_mac(line[2])
           fact = { :interface_name => res[0], :type => res[2], :mode => res[3], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1], :reason => res[5..length - 3], :tagged_vlan => taggedvlan, :untagged_vlan => untaggedvlan, :macaddress => mac_address }
           facts[fact[:interface_name]] = fact
         end
@@ -236,6 +236,10 @@ class PuppetX::Cisconexus5k::Facts
     facts[:fex_info] = fex_info
     #pp facts
     return facts
+  end
+  # d067.e572.13ce => d0:67:e5:72:13:ce
+  def normalize_mac(mac)
+    mac.gsub('.','').scan(/../).join(':') if mac
   end
 end
 
