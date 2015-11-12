@@ -159,17 +159,14 @@ class PuppetX::Cisconexus5k::Facts
     out = @transport.command("show version")
     
     # Remote LLDP information from the switch
-    lldp_info = []
-    out = @transport.command('show lldp  neighbors')
-    lldp_info = out.scan(/^([a-z0-9\.]+)\s+(\S+)\s+(\S+)\s+(\S+)/m)
     remote_device_info = []
-    if !lldp_info.empty?
-      lldp_info.each do |lldp_entry|
-        #interface = Local Intf, remote_mac = Device ID, location=Port ID 
-        remote_device = {:interface => lldp_entry[1], :location => lldp_entry[3], :remote_mac => lldp_entry[0]}
-        remote_device_info << remote_device
+    lldp_info = @transport.command('show lldp  neighbors')         
+    lldp_info.each_line do |line|
+      if line =~ /^(\S+)\s+(\S+)\s+(\d+)\s+(\S.*)/
+        remote_device_info << {:interface => $2, :location => $4, :remote_mac => $1}
       end
     end
+
     
     # Port channel information
     out = @transport.command('show port-channel summary')
