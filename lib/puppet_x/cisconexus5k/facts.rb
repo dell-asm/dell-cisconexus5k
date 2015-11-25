@@ -1,5 +1,6 @@
 require 'pp'
 require 'json'
+require 'nokogiri'
 require 'puppet_x/cisconexus5k/cisconexus5k'
 require 'puppet/util/network_device/ipcalc'
 
@@ -213,7 +214,6 @@ class PuppetX::Cisconexus5k::Facts
       fex_info[f]['Interfaces'] = out.scan(/^\s+(Eth#{f}\S+)/).flatten
     end
 
-
     
     # Get VSAN Zoneset information
     # since we can communicate with the switch, set status to online
@@ -231,6 +231,7 @@ class PuppetX::Cisconexus5k::Facts
     facts[:vsan_member_info] = vsan_info
     facts[:fex] = fex
     facts[:fex_info] = fex_info
+    facts[:vlan_information] = get_vlan_information.to_json
     #pp facts
     return facts
   end
@@ -238,5 +239,106 @@ class PuppetX::Cisconexus5k::Facts
   def normalize_mac(mac)
     mac.gsub('.','').scan(/../).join(':') if mac
   end
+
+  def vlan_data
+    {
+      "tagged_tengigabit" => [],
+      "untagged_tengigabit" => [],
+      "tagged_fortygigabit" => [],
+      "untagged_fortygigabit" => [],
+      "tagged_portchannel" => [],
+      "untagged_portchannel" =>[]
+    }
+  end
+
+  def pg_parser(vlan_map, native_vlans, vlan_id, pg)
+    iface_set = []
+    iface_range = pg.scan(/(\d*-*\d*)/).flatten.reject{|c| c.empty?}
+    stack = pg.scan(/.*\//).flatten.reject{|c| c.empty?}
+    if iface_range.last.include? "-"
+      first = iface_range.last.split("-")[0].to_i
+      last = iface_range.last.split("-")[1].to_i
+      (first..last).each do |i|
+        iface_set << stack.first + i.to_s
+      end
+    else
+      iface_set << pg
+    end
+    vlan_map[vlan_id] ||= vlan_data
+    iface_set.each do |v|
+      interface_name = interface_name_norm(v)
+      if native_vlans[v] == vlan_id
+        vlan_map[vlan_id]["untagged_tengigabit"] << interface_name if interface_name.start_with? "Te"
+        vlan_map[vlan_id]["untagged_portchannel"] << interface_name if interface_name.start_with? "Po"
+      else
+        vlan_map[vlan_id]["tagged_tengigabit"]<< interface_name if interface_name.start_with? "Te"
+        vlan_map[vlan_id]["tagged_portchannel"] << interface_name if interface_name.start_with? "Po"
+      end
+    end
+  end
+
+  def interface_name_norm(v)
+    if v.include? "port-channel"
+      v.gsub("port-channel","Po")
+    else
+      v.gsub("Ethernet","Te")
+    end
+  end
+
+  def sh_vlan_brief
+    @transport.command("sh vlan brief | xml | no-more").lines.to_a[1..-1].join
+  end
+
+  def sh_int_trunk
+    @transport.command("sh int trunk | xml | no-more").lines.to_a[1..-1].join
+  end
+
+  def get_vlan_information
+    sh_vlans = sh_vlan_brief
+
+    sh_vlan_doc = Nokogiri::XML.parse(sh_vlans)
+    vlans = []
+    sh_vlan_doc.css("//vlanshowbr-vlanid").each {|vlan| vlans << vlan.text}
+
+    sh_int_trunk_data = sh_int_trunk
+    sh_trunk_doc = Nokogiri::XML.parse(sh_int_trunk_data)
+
+    interface_list = []
+    native_vlans = {}
+    vlan_map = {}
+
+    sh_trunk_doc.css("//TABLE_vtp_pruning").each do |i|
+      next if i.css("interface").empty?
+      interface_list << i.css("interface").text
+    end
+
+    sh_trunk_doc.css("//TABLE_interface").each_with_index do |n, index|
+      next if n.css("native").empty?
+      native_vlans[interface_list[index]] = n.css("native").text
+    end
+    sh_vlan_doc.css("//ROW_vlanbriefxbrief").each do |v|
+      vlan_id = v.css("vlanshowbr-vlanid").text
+      ifaces = v.css("vlanshowplist-ifidx").text
+      next if ifaces.empty?
+      ifaces.split(",").each do |pg|
+        pg_parser(vlan_map, native_vlans, vlan_id, pg)
+      end
+    end
+
+    # clean up data
+    vlan_map.each do |vlan, data|
+      data.each do |type, ports|
+        next unless ports
+        if ports.empty?
+          ports = {}
+        else
+          ports = ports.uniq.join(",") if ports.class == Array
+        end
+        data[type] = ports
+      end
+    end
+    vlan_map
+  end
+
 end
 
