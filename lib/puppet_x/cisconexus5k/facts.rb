@@ -73,7 +73,7 @@ class PuppetX::Cisconexus5k::Facts
       facts["cpu_kernel"] = $2
       facts["cpu_idle"] = $3
     end
-    
+
     interface_res = @transport.command("show interface brief")
     fact = nil
     ethernet_interface_count = 0
@@ -95,10 +95,10 @@ class PuppetX::Cisconexus5k::Facts
         end
 
         out = @transport.command("show interface #{interface_name} mac-address")
-        
+
         #puts "====>output: #{out}  ====?interface name: #{interface_name} ===="
 
-        
+
         lines = out.split("\n")
         lines.shift; lines.shift; lines.shift; lines.shift; lines.shift; lines.pop
 
@@ -143,7 +143,7 @@ class PuppetX::Cisconexus5k::Facts
         flogi_info.push(vfc_interface)
       end
     end
-    
+
     # Name Server Information
     nameserver_info = []
     out = @transport.command('show fcns database detail')
@@ -158,17 +158,17 @@ class PuppetX::Cisconexus5k::Facts
 
     # Adding show version command to clear the buffer prompts
     out = @transport.command("show version")
-    
+
     # Remote LLDP information from the switch
     remote_device_info = []
-    lldp_info = @transport.command('show lldp  neighbors')         
+    lldp_info = @transport.command('show lldp  neighbors')
     lldp_info.each_line do |line|
       if line =~ /^(\S+)\s+(\S+)\s+(\d+)\s+(\S.*)/
         remote_device_info << {:interface => $2, :location => $4, :remote_mac => normalize_mac($1)}
       end
     end
 
-    
+
     # Port channel information
     out = @transport.command('show port-channel summary')
     port_channel_out = out.scan(/^(\d+)\s+(Po\d+).*?LACP\s+(.*?)$/m)
@@ -179,7 +179,7 @@ class PuppetX::Cisconexus5k::Facts
         port_channels[port_channel[:port_channel]] = port_channel
       end
     end
-    
+
     # Feature list enabled on the switch
     out = @transport.command('show running-config | inc feature')
     features = out.scan(/^feature\s+(\S+)$/m)
@@ -187,7 +187,7 @@ class PuppetX::Cisconexus5k::Facts
     if !features.empty?
       features.map {|x| configured_features.push(x[0])}
     end
-    
+
     # VSAN Membership
     out = @transport.command("show vsan")
     vsans = ( out.scan(/^vsan\s+(\d+)\s+/) || [] ).flatten
@@ -214,7 +214,7 @@ class PuppetX::Cisconexus5k::Facts
       fex_info[f]['Interfaces'] = out.scan(/^\s+(Eth#{f}\S+)/).flatten
     end
 
-    
+
     # Get VSAN Zoneset information
     # since we can communicate with the switch, set status to online
     # TODO: Find a method to get status programmatically
@@ -259,7 +259,11 @@ class PuppetX::Cisconexus5k::Facts
       first = iface_range.last.split("-")[0].to_i
       last = iface_range.last.split("-")[1].to_i
       (first..last).each do |i|
-        iface_set << stack.first + i.to_s
+        if stack.empty?
+          iface_set << "Po#{i.to_s}"
+        else
+          iface_set << stack.first + i.to_s
+        end
       end
     else
       iface_set << pg
@@ -286,22 +290,27 @@ class PuppetX::Cisconexus5k::Facts
   end
 
   def sh_vlan_brief
-    @transport.command("sh vlan brief | xml | no-more").lines.to_a[1..-1].join
+    @transport.command("show vlan brief | xml").lines.to_a[1..-1].join
   end
 
   def sh_int_trunk
-    @transport.command("sh int trunk | xml | no-more").lines.to_a[1..-1].join
+    @transport.command("show interface trunk | xml").lines.to_a[1..-1].join
   end
 
   def get_vlan_information
+    Puppet.debug("About to call sh_vlan_brief...")
     sh_vlans = sh_vlan_brief
+    Puppet.debug("Done calling sh_vlan_brief...")
 
     sh_vlan_doc = Nokogiri::XML.parse(sh_vlans)
     vlans = []
     sh_vlan_doc.css("//vlanshowbr-vlanid").each {|vlan| vlans << vlan.text}
-
+    Puppet.debug("Found vlans: #{vlans}")
+    Puppet.debug("About to call sh_int_trunk")
     sh_int_trunk_data = sh_int_trunk
+    Puppet.debug("Done calling sh_vlan_brief")
     sh_trunk_doc = Nokogiri::XML.parse(sh_int_trunk_data)
+    Puppet.debug("Parsed sh_trunk_doc")
 
     interface_list = []
     native_vlans = {}
@@ -337,6 +346,7 @@ class PuppetX::Cisconexus5k::Facts
         data[type] = ports
       end
     end
+    Puppet.debug("Exiting, successfully calculated vlan_map")
     vlan_map
   end
 

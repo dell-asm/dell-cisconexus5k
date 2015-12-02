@@ -54,7 +54,7 @@ class PuppetX::Cisconexus5k::Transport
 
     @enable_password = device_conf[:password]
     #options[:enable_password] || parse_enable(device_conf[:password])
-    @session.default_prompt = /[#>]\s?\z/n
+    @session.default_prompt = /\r.*[#>]\s?\z/n
 
   end
 
