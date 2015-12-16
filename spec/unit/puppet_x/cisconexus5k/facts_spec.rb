@@ -16,10 +16,10 @@ describe PuppetX::Cisconexus5k::Facts do
       expect(vlan_information["18"]).to eq({
                                              "tagged_tengigabit"=>"Te1/17,Te1/20,Te1/21,Te1/29,Te1/30,Te1/31,Te102/1/2,Te102/1/3",
                                              "untagged_tengigabit"=>"Te1/19",
-                                             "tagged_fortygigabit"=>{},
-                                             "untagged_fortygigabit"=>{},
+                                             "tagged_fortygigabit"=>"",
+                                             "untagged_fortygigabit"=>"",
                                              "tagged_portchannel"=>"Po125,Po128",
-                                             "untagged_portchannel"=>{}})
+                                             "untagged_portchannel"=>""})
       expect(vlan_information).to include("1")
       expect(vlan_information["1"]).to include("untagged_portchannel")
       expect(vlan_information["1"]["untagged_portchannel"]).to eq("Po125,Po128")
