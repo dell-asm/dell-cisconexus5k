@@ -223,17 +223,17 @@ class PuppetX::Cisconexus5k::Facts
     facts[:status] = "online"
     facts[:manufacturer] = "Cisco"
     facts[:flogi_info] = flogi_info
-    facts[:nameserver_info] = nameserver_info
-    facts[:vsan_zoneset_info] = vsan_zoneset_info
+    facts[:nameserver_info] = nameserver_info.to_json
+    facts[:vsan_zoneset_info] = vsan_zoneset_info.to_json
     facts[:remote_device_info] = remote_device_info.to_json
     facts[:port_channels] = port_channels.to_json
     facts[:features] = configured_features
-    facts[:vsan_member_info] = vsan_info
-    facts[:fex] = fex
-    facts[:fex_info] = fex_info
+    facts[:vsan_member_info] = vsan_info.to_json
+    facts[:fex] = fex.to_json
+    facts[:fex_info] = fex_info.to_json
     facts[:vlan_information] = get_vlan_information.to_json
-    #pp facts
-    return facts
+
+    facts
   end
   # d067.e572.13ce => d0:67:e5:72:13:ce
   def normalize_mac(mac)
