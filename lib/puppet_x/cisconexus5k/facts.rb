@@ -107,7 +107,7 @@ class PuppetX::Cisconexus5k::Facts
           line = lines[0].split(" ")
           mac_address = normalize_mac(line[2])
           fact = { :interface_name => res[0], :type => res[2], :mode => res[3], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1], :reason => res[5..length - 3], :tagged_vlan => taggedvlan, :untagged_vlan => untaggedvlan, :macaddress => mac_address }
-          facts[fact[:interface_name]] = fact
+          facts[fact[:interface_name]] = fact.to_json
         end
       end
       if ( line =~ /^fc(\d+)/ )
@@ -115,7 +115,7 @@ class PuppetX::Cisconexus5k::Facts
         res = line.split(" ")
         length = res.length
         fact = { :interface_name => res[0], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1] }
-        facts[fact[:interface_name]] = fact
+        facts[fact[:interface_name]] = fact.to_json
       end
       if ( line =~ /^mgmt0/ )
         res = line.split(" ")
@@ -163,8 +163,8 @@ class PuppetX::Cisconexus5k::Facts
     remote_device_info = []
     lldp_info = @transport.command('show lldp  neighbors')
     lldp_info.each_line do |line|
-      if line =~ /^(\S+)\s+(\S+)\s+(\d+)\s+(\S.*)/
-        remote_device_info << {:interface => $2, :location => $4, :remote_mac => normalize_mac($1)}
+      if line =~ /^(\S+)\s+(\S+)\s+(\d+)\s{1,11}(\S|\s{1,12})\s+(\S.*)/
+        remote_device_info << {:interface => $2.strip, :location => $5.strip, :remote_mac => normalize_mac($1.strip)}
       end
     end
 
@@ -223,17 +223,17 @@ class PuppetX::Cisconexus5k::Facts
     facts[:status] = "online"
     facts[:manufacturer] = "Cisco"
     facts[:flogi_info] = flogi_info
-    facts[:nameserver_info] = nameserver_info
-    facts[:vsan_zoneset_info] = vsan_zoneset_info
+    facts[:nameserver_info] = nameserver_info.to_json
+    facts[:vsan_zoneset_info] = vsan_zoneset_info.to_json
     facts[:remote_device_info] = remote_device_info.to_json
     facts[:port_channels] = port_channels.to_json
     facts[:features] = configured_features
-    facts[:vsan_member_info] = vsan_info
-    facts[:fex] = fex
-    facts[:fex_info] = fex_info
+    facts[:vsan_member_info] = vsan_info.to_json
+    facts[:fex] = fex.to_json
+    facts[:fex_info] = fex_info.to_json
     facts[:vlan_information] = get_vlan_information.to_json
-    #pp facts
-    return facts
+
+    facts
   end
   # d067.e572.13ce => d0:67:e5:72:13:ce
   def normalize_mac(mac)
