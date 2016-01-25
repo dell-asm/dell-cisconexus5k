@@ -107,7 +107,7 @@ class PuppetX::Cisconexus5k::Facts
           line = lines[0].split(" ")
           mac_address = normalize_mac(line[2])
           fact = { :interface_name => res[0], :type => res[2], :mode => res[3], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1], :reason => res[5..length - 3], :tagged_vlan => taggedvlan, :untagged_vlan => untaggedvlan, :macaddress => mac_address }
-          facts[fact[:interface_name]] = fact
+          facts[fact[:interface_name]] = fact.to_json
         end
       end
       if ( line =~ /^fc(\d+)/ )
@@ -115,7 +115,7 @@ class PuppetX::Cisconexus5k::Facts
         res = line.split(" ")
         length = res.length
         fact = { :interface_name => res[0], :status => res[4], :speed => res[length - 2], :portchannel => res[length - 1] }
-        facts[fact[:interface_name]] = fact
+        facts[fact[:interface_name]] = fact.to_json
       end
       if ( line =~ /^mgmt0/ )
         res = line.split(" ")
