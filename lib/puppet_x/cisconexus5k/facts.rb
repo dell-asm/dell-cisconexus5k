@@ -163,8 +163,8 @@ class PuppetX::Cisconexus5k::Facts
     remote_device_info = []
     lldp_info = @transport.command('show lldp  neighbors')
     lldp_info.each_line do |line|
-      if line =~ /^(\S+)\s+(\S+)\s+(\d+)\s+(\S.*)/
-        remote_device_info << {:interface => $2, :location => $4, :remote_mac => normalize_mac($1)}
+      if line =~ /^(\S+)\s+(\S+)\s+(\d+)\s{1,11}(\S|\s{1,12})\s+(\S.*)/
+        remote_device_info << {:interface => $2.strip, :location => $5.strip, :remote_mac => normalize_mac($1.strip)}
       end
     end
 
