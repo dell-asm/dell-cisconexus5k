@@ -214,6 +214,22 @@ class PuppetX::Cisconexus5k::Facts
       fex_info[f]['Interfaces'] = out.scan(/^\s+(Eth#{f}\S+)/).flatten
     end
 
+    # Zone Membership info
+    zone_member = {}
+    zone_out = @transport.command("show zone")
+    zones = ( zone_out.scan(/zone name\s*(\S+)\s*vsan\s*\d+/).flatten || [] )
+    (vsans || []) .each do |vsan|
+      zone_member[vsan] = {}
+      (zones || []).each do |zone|
+        zone_detail_pattern = "zone name\\s*#{zone}\\s*vsan\\s*#{vsan}(.*?)(zone|#{facts["hostname"]})"
+        zone_info = (zone_out.scan(/#{zone_detail_pattern}/m) || []).flatten.first
+        next if zone_info.nil? || zone_info.empty?
+        zone_member[vsan][zone] = []
+        zone_members = (zone_info.scan(/pwwn\s+(\S+)/m) || []).flatten
+        zone_member[vsan][zone].push(*zone_members) if zone_members
+      end
+    end
+
 
     # Get VSAN Zoneset information
     # since we can communicate with the switch, set status to online
@@ -232,6 +248,7 @@ class PuppetX::Cisconexus5k::Facts
     facts[:fex] = fex
     facts[:fex_info] = fex_info
     facts[:vlan_information] = get_vlan_information.to_json
+    facts[:zone_member] = zone_member.to_json
     #pp facts
     return facts
   end
