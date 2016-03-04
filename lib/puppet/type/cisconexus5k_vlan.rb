@@ -16,7 +16,7 @@ Puppet::Type.newtype(:cisconexus5k_vlan) do
       if value !~ /^\d+/
         raise ArgumentError, "The value of the VLAN Id must be a positive integer."
       end
-      if value.to_i <= 1 || value.to_i >= 4094
+      if value.to_i < 1 || value.to_i >= 4094
         raise ArgumentError, "A valid VLAN Id value must not be less than 1,  and must not exceed 4093."
       end
       #if value.to_i == 0
