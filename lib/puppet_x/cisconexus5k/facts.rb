@@ -44,12 +44,9 @@ class PuppetX::Cisconexus5k::Facts
       end
     end
 
-    out = @transport.command("show snmp community")
-    for line in out.split("\n")
-      if (line.match('(\w+) \s+ network-operator'))
-        facts["snmp_community_string"] = $1
-      end
-    end
+    out=@transport.command("show snmp community")
+    item = out.scan(/(\w+)\s+\w+-\w+/).flatten
+    facts["snmp_community_string"] = item.to_json
 
     protocols = ""
     out = @transport.command("show feature")
