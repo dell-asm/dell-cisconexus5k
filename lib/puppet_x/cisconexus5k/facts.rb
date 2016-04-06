@@ -125,6 +125,7 @@ class PuppetX::Cisconexus5k::Facts
         res = line.split(" ")
         management_ip = res[3]
         facts[:managementip] = management_ip
+        facts[:management_ip] = management_ip
       end
     end
     out = @transport.command("show inventory")
