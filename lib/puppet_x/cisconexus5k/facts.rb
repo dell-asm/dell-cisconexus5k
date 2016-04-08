@@ -44,6 +44,10 @@ class PuppetX::Cisconexus5k::Facts
       end
     end
 
+    out=@transport.command("show snmp community")
+    item = out.scan(/(\w+)\s+\w+-\w+/).flatten
+    facts["snmp_community_string"] = item.to_json
+
     protocols = ""
     out = @transport.command("show feature")
     lines = out.split("\n")
@@ -121,6 +125,7 @@ class PuppetX::Cisconexus5k::Facts
         res = line.split(" ")
         management_ip = res[3]
         facts[:managementip] = management_ip
+        facts[:management_ip] = management_ip
       end
     end
     out = @transport.command("show inventory")
