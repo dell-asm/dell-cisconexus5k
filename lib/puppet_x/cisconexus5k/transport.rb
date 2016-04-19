@@ -494,13 +494,15 @@ class PuppetX::Cisconexus5k::Transport
         Puppet.info("A switch interface with a native VLAN is being configured.")
         Puppet.debug("Command: 'switchport trunk native vlan #{nativevlanid}'")
         execute("switchport trunk native vlan #{nativevlanid}")
+        execute("no shutdown")
       elsif isnative == "false"
-        Puppet.info("Need to remove the vative vlan configuration.")
+        Puppet.info("Need to remove the native vlan configuration.")
         Puppet.debug("Command: 'no switchport trunk native vlan #{nativevlanid}'")
+        tagged_vlans = show_vlans(interfaceid)
+        remove_tagged_vlans(id, interfaceid, tagged_vlans)
         execute("no switchport trunk native vlan #{nativevlanid}")
+        execute("no shutdown")
       end
-      execute("switchport trunk allowed vlan add #{id}")
-      execute("no shutdown")
     else
       Puppet.info "The interface #{interfaceid} is being configured into access mode."
       execute("switchport")
@@ -513,6 +515,46 @@ class PuppetX::Cisconexus5k::Transport
     return
   end
 
+  def show_vlans(interfaceid)
+    get_vlan_info = execute("show running-config interface #{interfaceid}")
+    meta_data = get_vlan_info.match /switchport trunk allowed vlan (.+?)$/
+    tagged = []
+    str = meta_data.nil? ? "" : meta_data[1]
+    str_arr = str.split(",")
+    str_arr.each do |num_str|
+      num = num_str.to_i
+      if num_str == num.to_s
+        tagged << num
+      else
+        nums = num_str.split("-").map(&:to_i)
+        nums[0].upto(nums[1]).each do |range_num|
+          tagged << range_num
+        end
+      end
+    end
+    return tagged
+  end
+
+  def remove_tagged_vlans(id, interfaceid, existing_vlans)
+    id = id.split("/").map(&:to_i)
+    current_vlans = existing_vlans
+
+    vlans_to_remove = current_vlans - id
+    vlans_to_remove.each do |vlan|
+      Puppet.info("Removing unnecessary tagged vlans")
+      execute("config")
+      execute("interface #{interfaceid}")
+      execute("switchport trunk allowed vlan remove #{vlan}")
+    end
+
+    vlans_to_add = id - existing_vlans
+    vlans_to_add.each do |val|
+      Puppet.info("adding vlans")
+      execute("config")
+      execute("interface #{interfaceid}")
+      execute("switchport trunk allowed vlan add #{val}")
+    end
+  end
 
   def update_feature_set(id, is = {}, should = {}, feature_name = '', ensure_absent = ':absent')
     if should[:ensure] == :absent || ensure_absent == :absent
@@ -958,3 +1000,4 @@ class PuppetX::Cisconexus5k::Transport
     execute("exit")
   end
 end
+
