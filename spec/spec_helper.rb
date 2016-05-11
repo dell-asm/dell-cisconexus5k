@@ -1,4 +1,3 @@
-
 dir = File.expand_path(File.dirname(__FILE__))
 $LOAD_PATH.unshift File.join(dir, 'spec_lib')
 
@@ -17,7 +16,16 @@ require 'rspec/expectations'
 # So everyone else doesn't have to include this base constant.
 module PuppetSpec
   FIXTURE_DIR = File.join(dir = File.expand_path(File.dirname(__FILE__)), "fixtures") unless defined?(FIXTURE_DIR)
+
+  def self.fixture_path(fixture)
+    File.join(FIXTURE_DIR, fixture)
+  end
+
+  def self.load_fixture(fixture)
+    File.read(fixture_path(fixture))
+  end
 end
+
 
 require 'pathname'
 require 'tmpdir'
@@ -39,13 +47,13 @@ require 'puppet_spec/database'
 RSpec.configure do |config|
   include PuppetSpec::Fixtures
   include PuppetSpec::Deviceconf
- # include PuppetSpec::Setupcleanup
+  # include PuppetSpec::Setupcleanup
   #include PuppetSpec::Validation
   #include PuppetSpec::Factervalue
-  
+
   #c.module_path = File.join(fixture_path, 'modules')
   #c.manifest_dir = File.join(fixture_path, 'manifests')
-  
+
   config.filter_run_excluding :broken => true
 
   #config.mock_with :mocha
@@ -74,4 +82,3 @@ RSpec.configure do |config|
     FileUtils.rm_rf(tmpdir) if File.exists?(tmpdir) && tmpdir.to_s.start_with?(oldtmpdir)
   end
 end
-

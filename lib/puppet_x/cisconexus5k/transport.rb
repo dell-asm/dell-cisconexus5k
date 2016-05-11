@@ -37,20 +37,14 @@ class PuppetX::Cisconexus5k::Transport
     #@query = CGI.parse(@url.query) if @url.query
 
     #if @autoloader.load(device_conf[:scheme])
-      require "puppet_x/cisconexus5k/ssh"
-      @session = PuppetX::Cisconexus5k::Ssh.new(true)
-      #= PuppetX::Cisconexus5k::Ssh.new(true)
-      #= Puppet::Util::NetworkDevice::session.const_get(device_conf[:scheme].capitalize).new(options[:debug])
-      @session.host = device_conf[:host]
-      @session.port = device_conf[:port] || 22
+    require "puppet_x/cisconexus5k/ssh"
+    @session = PuppetX::Cisconexus5k::Ssh.new(true)
 
-      @session.user = device_conf[:user]
-      @session.password = device_conf[:password]
+    @session.host = device_conf[:host]
+    @session.port = device_conf[:port] || 22
 
-      #@cred_id = device_conf[:credential_id]
-
-      #override_using_credential_id
-    #end
+    @session.user = device_conf[:user]
+    @session.password = device_conf[:password]
 
     @enable_password = device_conf[:password]
     #options[:enable_password] || parse_enable(device_conf[:password])
@@ -75,7 +69,7 @@ class PuppetX::Cisconexus5k::Transport
     login
     check_ag
   end
-  
+
   def check_ag
     if session.command('ag --modeshow')['Access Gateway mode is enabled.'].nil?
       abort("Access Gateway mode required to configure switch.")
@@ -166,10 +160,10 @@ class PuppetX::Cisconexus5k::Transport
   }
 
   def canonalize_ifname(interface)
-    IF.each do |k,ifnames|
+    IF.each do |k, ifnames|
       if found = ifnames.find { |ifname| interface =~ /^#{ifname}\s*\d/i }
         found = /^#{found}(.+)\Z/i.match(interface)
-        return "#{k.to_s}#{found[1]}".gsub(/\s+/,'')
+        return "#{k.to_s}#{found[1]}".gsub(/\s+/, '')
       end
     end
     interface
@@ -192,9 +186,9 @@ class PuppetX::Cisconexus5k::Transport
     vlan = nil
     lines.each do |line|
       case line
-      # vlan    name    status
+        # vlan    name    status
       when /^(\d+)\s+(\w+)\s+(\w+)\s+([a-zA-Z0-9,\/. ]+)\s*$/
-        vlan = { :name => $1, :vlanname => $2, :status => $3, :interfaces => [] }
+        vlan = {:name => $1, :vlanname => $2, :status => $3, :interfaces => []}
         if $4.strip.length > 0
           vlan[:interfaces] = $4.strip.split(/\s*,\s*/)
         end
@@ -204,17 +198,17 @@ class PuppetX::Cisconexus5k::Transport
         if $1.strip.length > 0
           vlan[:interfaces] += $1.strip.split(/\s*,\s*/)
         end
-      else
-        next
+        else
+          next
+        end
       end
-    end
     vlans
   end
-  
+
   def parse_vsans
     vsan_info = {}
     vsan_res = execute("show vsan")
-    vsans = ( vsan_res.scan(/^vsan\s+(\d+)\s+/i) || [] ).flatten
+    vsans = (vsan_res.scan(/^vsan\s+(\d+)\s+/i) || []).flatten
     vsans.each do |vsan|
       vsan_membership = execute("show vsan #{vsan} membership")
       vsan_info[vsan] = vsan_membership.scan(/(fc\d+\/\d+|vfc\d+|san-port-channel\s+\d+)/).flatten
@@ -225,25 +219,26 @@ class PuppetX::Cisconexus5k::Transport
   def parse_fexs
     fex_info = {}
     fex_res = execute("show fex")
-    fexs = ( fex_res.scan(/^(\d+)\s+(.*?)?\s+(\w+)\s+(\S+)\s+(\S+)$/i) || [] )
+    fexs = (fex_res.scan(/^(\d+)\s+(.*?)?\s+(\w+)\s+(\S+)\s+(\S+)$/i) || [])
     fexs.each do |fex|
       fex_id = fex[0]
       fex_info[fex_id] = {:name => fex_id, :description => fex[1], :status => fex[2], :model => fex[3], :serial_num => fex[4]}
     end
     fex_info
   end
-  
+
   def parse_vfc_interfaces
     vfc_interfaces = {}
     out = execute("show interface brief")
     vfc_interfaces_info = out.scan(/^vfc\s+(\d+)\s+(\d+)\s+\S+\s+(\S+)\s+(\S+)/)
     if vfc_interfaces_info.empty?
-      vfc_interfaces_info.each do vfc_interface_info
-        vfc_interfaces = {:name =>  vfc_interface_info[0], 
-          :vsan => vfc_interface_info[1], 
-          :admin_mode => vfc_interface_info[2], 
-          :admin_trunk_mode => vfc_interface_info[3], 
-          :status => vfc_interface_info[4]}
+      vfc_interfaces_info.each do
+        vfc_interface_info
+        vfc_interfaces = {:name => vfc_interface_info[0],
+                          :vsan => vfc_interface_info[1],
+                          :admin_mode => vfc_interface_info[2],
+                          :admin_trunk_mode => vfc_interface_info[3],
+                          :status => vfc_interface_info[4]}
       end
     end
     vfc_interfaces
@@ -252,9 +247,9 @@ class PuppetX::Cisconexus5k::Transport
   def parse_install_features
     install_features = {}
     out = execute("show running-config | include 'install feature-set'")
-    features = ( out.scan(/^install feature-set\s+(\S+)/).flatten  || [] )
+    features = (out.scan(/^install feature-set\s+(\S+)/).flatten || [])
     features.each do |f|
-        install_features[f] = { :name => f , :feature => f}
+      install_features[f] = {:name => f, :feature => f}
     end
     install_features
   end
@@ -266,17 +261,17 @@ class PuppetX::Cisconexus5k::Transport
     lines.shift; lines.pop
     zone = nil
     lines.each do |l|
-      zone = { :name => '' , :vsanid => '', :membertype => [], :member => [] }
+      zone = {:name => '', :vsanid => '', :membertype => [], :member => []}
       if l =~ /^zone name\s*(\S*)\s*vsan\s*(\d*)/
-        zone = { :name => $1, :vsanid => $2, :membertype => [], :member => [] }
+        zone = {:name => $1, :vsanid => $2, :membertype => [], :member => []}
       end
       if l =~ /pwwn\s*(\S*)/
-        zone[:member] += Array($1).map{ |ifn| canonalize_ifname(ifn) }
-        zone[:membertype] += Array('pwwn').map{ |ifn| canonalize_ifname(ifn) }
+        zone[:member] += Array($1).map { |ifn| canonalize_ifname(ifn) }
+        zone[:membertype] += Array('pwwn').map { |ifn| canonalize_ifname(ifn) }
       end
       if l =~/fcalias name\s*(\S*)\s*vsan\s*(\d*)/
-        zone[:member] += Array($1).map{ |ifn| canonalize_ifname(ifn) }
-        zone[:membertype] += Array('fcalias').map{ |ifn| canonalize_ifname(ifn) }
+        zone[:member] += Array($1).map { |ifn| canonalize_ifname(ifn) }
+        zone[:membertype] += Array('fcalias').map { |ifn| canonalize_ifname(ifn) }
       end
       zones[zone[:name]] = zone if zone[:name].length > 0
     end
@@ -288,10 +283,10 @@ class PuppetX::Cisconexus5k::Transport
     out=execute("show device-alias database")
     Puppet.debug "show device-alias database \n  #{out} "
     lines = out.split("\n")
-    lines.shift ; lines.pop
+    lines.shift; lines.pop
     lines.each do |l|
       if l =~ /device-alias\s*name\s*(\S*)\s*(\S*)\s*(\S*)/
-        m_alias = { :name => $1, :member => $3 }
+        m_alias = {:name => $1, :member => $3}
         malias[m_alias[:name]] = m_alias
       end
     end
@@ -315,8 +310,8 @@ class PuppetX::Cisconexus5k::Transport
     lines.shift; lines.pop
     activezoneset = nil
     lines.each do |l|
-      if l =~  /^zoneset name\s+(\S+)\s+vsan\s+(\d+)\s*$/
-        activezoneset = { :name => $1, :vsanid => $2}
+      if l =~ /^zoneset name\s+(\S+)\s+vsan\s+(\d+)\s*$/
+        activezoneset = {:name => $1, :vsanid => $2}
         varkey = "VSAN_"+$2+"_"+$1
         #puts("Active Zoneset Key: #{varkey}")
         activezonesets[varkey] = activezoneset
@@ -336,18 +331,18 @@ class PuppetX::Cisconexus5k::Transport
     lines.shift; lines.pop
     zoneset = nil
     lines.each do |l|
-      zoneset = { :name => '' , :vsanid => '' }
-      if l =~  /^zoneset name\s+(\S+)\s+vsan\s+(\d+)\s*$/
+      zoneset = {:name => '', :vsanid => ''}
+      if l =~ /^zoneset name\s+(\S+)\s+vsan\s+(\d+)\s*$/
         varkey = "VSAN_"+$2+"_"+$1
         if activezonesets.key?(varkey)
-          zoneset = { :name => $1, :vsanid => $2, :member => [], :active => "true" }
+          zoneset = {:name => $1, :vsanid => $2, :member => [], :active => "true"}
         else
-          zoneset = { :name => $1, :vsanid => $2, :member => [], :active => "false" }
+          zoneset = {:name => $1, :vsanid => $2, :member => [], :active => "false"}
         end
       end
       if l =~ /zone\s+(\S*)/
         #Puppet.debug("Zoneset: #{zoneset[:name]} Member: #{$1}")
-        zoneset[:member] += Array($1).map{ |ifn| canonalize_ifname(ifn) } if zoneset[:name].length > 0
+        zoneset[:member] += Array($1).map { |ifn| canonalize_ifname(ifn) } if zoneset[:name].length > 0
       end
       zonesets["VSAN_"+zoneset[:vsanid]+"_"+zoneset[:name]] = zoneset if zoneset[:vsanid].length > 0
       #Puppet.debug("Found Zoneset-> zonesetName : #{zoneset[:name]} vsanid : #{zoneset[:vsanid]} member : #{zoneset[:member]} active : #{zoneset[:active]}")
@@ -357,9 +352,9 @@ class PuppetX::Cisconexus5k::Transport
     zonesets
   end
 
-  def update_alias(id, is = {}, should = {},member = {}, tempensure = {} )
+  def update_alias(id, is = {}, should = {}, member = {}, tempensure = {})
     #member=should[:member]
-    if  tempensure.to_s == "absent" || should[:ensure] == :absent
+    if tempensure.to_s == "absent" || should[:ensure] == :absent
       Puppet.debug "Removing #{id} from device alias"
       execute("conf t")
       execute("device-alias database")
@@ -375,7 +370,7 @@ class PuppetX::Cisconexus5k::Transport
     execute("device-alias database")
     Puppet.debug "id #{id} member #{member}  "
     out = execute("device-alias name  #{id} pwwn #{member}")
-    if ( out =~ /% Invalid/ )
+    if (out =~ /% Invalid/)
       raise "The command input #{memberval} is invalid"
     end
     if (out =~ /already present/)
@@ -418,11 +413,11 @@ class PuppetX::Cisconexus5k::Transport
     execute("exit")
   end
 
-  def update_interface(id, is = {}, should = {},interfaceid = {},nativevlanid={},istrunk = {},encapsulationtype={},isnative={},deletenativevlaninformation={},unconfiguretrunkmode={},
-    shutdownswitchinterface={},interfaceoperation={}, removeallassociatedvlans={},ensureabsent=':absent')
+  def update_interface(id, is = {}, should = {}, interfaceid = {}, nativevlanid={}, istrunk = {}, encapsulationtype={}, isnative={}, deletenativevlaninformation={}, unconfiguretrunkmode={},
+                       shutdownswitchinterface={}, interfaceoperation={}, removeallassociatedvlans={}, ensureabsent=':absent')
     Puppet.debug("Performing the update interfaces for Cisco Nexus")
     responseinterface = execute("show interface #{interfaceid}")
-    if ( responseinterface =~ /Invalid/ )
+    if (responseinterface =~ /Invalid/)
       raise "The interface #{interfaceid} does not exist on the switch."
     end
     if should[:ensure] == :absent || interfaceoperation == "remove" || ensureabsent == :absent
@@ -431,12 +426,12 @@ class PuppetX::Cisconexus5k::Transport
       execute("interface #{interfaceid}")
       if istrunk == "true"
         responsetrunk = execute("show interface #{interfaceid} trunk")
-        if ( responsetrunk =~ /Invalid/ )
+        if (responsetrunk =~ /Invalid/)
           Puppet.info("The trunking is not configured on the interface #{interfaceid}.")
           return
         end
         interfacestatus = gettrunkinterfacestatus(responsetrunk)
-        if ( interfacestatus != "trunking" )
+        if (interfacestatus != "trunking")
           Puppet.info "The interface #{interfaceid} is in access mode."
           return
         end
@@ -471,17 +466,17 @@ class PuppetX::Cisconexus5k::Transport
     if istrunk == "true"
       Puppet.debug("Verify whether or not the specified interface is already configured as a trunk interface.")
       responsetrunk = execute("show interface #{interfaceid} trunk")
-      if ( responsetrunk =~ /Invalid/ )
+      if (responsetrunk =~ /Invalid/)
         Puppet.info("The trunking feature is not already configured for  the interface #{interfaceid}. Configure trunking feature on this interface.")
         return
       end
       Puppet.info("The trunk interface status for #{interfaceid} is being retrieved.")
       interfacestatus = gettrunkinterfacestatus(responsetrunk)
       Puppet.info("The encapsulationtype for the interface #{interfaceid} is being retrieved.")
-      updateencapsulationtype = getencapsulationtype(interfaceid,encapsulationtype)
-      if ( interfacestatus != "trunking" )
+      updateencapsulationtype = getencapsulationtype(interfaceid, encapsulationtype)
+      if (interfacestatus != "trunking")
         execute("switchport")
-        if ( updateencapsulationtype != "" )
+        if (updateencapsulationtype != "")
           execute("switchport trunk encapsulation #{updateencapsulationtype}")
         end
         execute("switchport mode trunk")
@@ -494,10 +489,16 @@ class PuppetX::Cisconexus5k::Transport
         Puppet.info("A switch interface with a native VLAN is being configured.")
         Puppet.debug("Command: 'switchport trunk native vlan #{nativevlanid}'")
         execute("switchport trunk native vlan #{nativevlanid}")
+        execute("switchport trunk allowed vlan add #{id}")
+        execute("no shutdown")
       elsif isnative == "false"
-        Puppet.info("Need to remove the vative vlan configuration.")
+        Puppet.info("Need to remove the native vlan configuration.")
         Puppet.debug("Command: 'no switchport trunk native vlan #{nativevlanid}'")
         execute("no switchport trunk native vlan #{nativevlanid}")
+        # add functions here
+        tagged_vlans = show_vlans(interfaceid)
+        update_tagged_vlans(id, interfaceid, tagged_vlans)
+        execute("no shutdown")
       end
       execute("switchport trunk allowed vlan add #{id}")
       execute("no shutdown")
@@ -513,6 +514,46 @@ class PuppetX::Cisconexus5k::Transport
     return
   end
 
+  def show_vlans(interfaceid)
+    get_vlan_info = execute("show running-config interface #{interfaceid}")
+    meta_data = get_vlan_info.match /switchport trunk allowed vlan ([0-9,-]+)$/
+    tagged = []
+    str = meta_data.nil? ? "" : meta_data[1]
+    str_arr = str.split(",")
+    str_arr.each do |num_str|
+      num = num_str.to_i
+      if num_str == num.to_s
+        tagged << num
+      else
+        nums = num_str.split("-").map(&:to_i)
+        nums[0].upto(nums[1]).each do |range_num|
+          tagged << range_num
+        end
+      end
+    end
+    return tagged
+  end
+
+  def update_tagged_vlans(vlan_id, interfaceid, existing_vlans)
+    vlan_id = vlan_id.split("/").map(&:to_i)
+    current_vlans = existing_vlans
+
+    vlans_to_remove = current_vlans - vlan_id
+    vlans_to_remove.each do |vlan|
+      Puppet.info("Removing unnecessary tagged vlans")
+      execute("config")
+      execute("interface #{interfaceid}")
+      execute("switchport trunk allowed vlan remove #{vlan}")
+    end
+
+    vlans_to_add = vlan_id - existing_vlans
+    vlans_to_add.each do |val|
+      Puppet.info("adding vlans")
+      execute("config")
+      execute("interface #{interfaceid}")
+      execute("switchport trunk allowed vlan add #{val}")
+    end
+  end
 
   def update_feature_set(id, is = {}, should = {}, feature_name = '', ensure_absent = ':absent')
     if should[:ensure] == :absent || ensure_absent == :absent
@@ -531,7 +572,7 @@ class PuppetX::Cisconexus5k::Transport
     return
   end
 
-  def update_fex(id, is = {}, should = {}, fcoe = {} , ensure_absent = ":absent")
+  def update_fex(id, is = {}, should = {}, fcoe = {}, ensure_absent = ":absent")
     Puppet.debug("Performing the vsan update for Cisco Nexus")
 
     if should[:ensure] == :absent || ensure_absent == :absent
@@ -582,12 +623,12 @@ class PuppetX::Cisconexus5k::Transport
     else
       execute("shutdown")
     end
-    
+
     execute("exit")
     return
   end
 
-  def update_vsan(id, is = {}, should = {}, vsanname = {}, membership = {} , membershipoperation = {} , fcoemap = {} , ensureabsent = ":absent")
+  def update_vsan(id, is = {}, should = {}, vsanname = {}, membership = {}, membershipoperation = {}, fcoemap = {}, ensureabsent = ":absent")
     Puppet.debug("Performing the vsan update for Cisco Nexus")
 
     if should[:ensure] == :absent || ensureabsent == :absent
@@ -607,9 +648,9 @@ class PuppetX::Cisconexus5k::Transport
     if !vsanname.empty?
       execute("vsan #{id} name #{vsanname}")
     end
-    
+
     if !membership.empty?
-      members = ( membership.split(';') || [] )
+      members = (membership.split(';') || [])
       members.each do |member|
         if membershipoperation == 'add'
           execute("vsan #{id} interface #{member}")
@@ -618,12 +659,12 @@ class PuppetX::Cisconexus5k::Transport
         end
       end
     end
-    
+
     if !fcoemap.empty?
       execute("fcoe fcmap #{fcoemap}")
       execute("y")
     end
-    
+
     execute("end")
     return
   end
@@ -727,7 +768,7 @@ class PuppetX::Cisconexus5k::Transport
       if (member !=nil)
         mem = member.split(",")
         mem.each do |memberval|
-          out =  execute("member #{memberval}")
+          out = execute("member #{memberval}")
           Puppet.debug("#{out}")
         end
       end
@@ -780,7 +821,7 @@ class PuppetX::Cisconexus5k::Transport
     # Create or update zoneset - end
   end
 
-  def getencapsulationtype(interfaceid,encapsulationtype)
+  def getencapsulationtype(interfaceid, encapsulationtype)
     updateencapsulationtype = ""
     encapsulationtypelist = ""
     if encapsulationtype != ""
@@ -788,7 +829,7 @@ class PuppetX::Cisconexus5k::Transport
       if responsecapability =~ /Trunk encap. type:\s+(\S+)/
         encapsulationtypelist = $1
       end
-      if ( encapsulationtypelist =~ /,/ )
+      if (encapsulationtypelist =~ /,/)
         Puppet.info("The multiple encapsulation types exist.")
         updateencapsulationtype = encapsulationtype
       else
@@ -807,24 +848,24 @@ class PuppetX::Cisconexus5k::Transport
   end
 
   def gettrunkinterfacestatus(response)
-    response = response.gsub("\n",'')
+    response = response.gsub("\n", '')
     if response =~ /--.+\s+\s+(tr\S+)\s+/
       trunk = $1
     end
-    if ( trunk =~ /trnk-bndl/ )
+    if (trunk =~ /trnk-bndl/)
       trunk = "trunking"
     end
     return trunk
   end
 
-  def update_portchannel(id, is = {}, should = {}, portchannel = {}, istrunkforportchannel = {},portchanneloperation = {},ensureabsent=':absent')
+  def update_portchannel(id, is = {}, should = {}, portchannel = {}, istrunkforportchannel = {}, portchanneloperation = {}, ensureabsent=':absent')
     if portchannel !~ /\d/
       Puppet.info("The port channel #{portchannel} should be numeric value.")
       return
     end
     pchannel = "po#{portchannel}"
     responsepchannel = execute("show interface #{pchannel}")
-    if ( responsepchannel =~ /Invalid/ )
+    if (responsepchannel =~ /Invalid/)
       raise "A port channel #{portchannel} does not exist on the switch."
       return
     end
@@ -847,7 +888,7 @@ class PuppetX::Cisconexus5k::Transport
     if (istrunkforportchannel == "true")
       Puppet.info "A port channel #{portchannel} is being configured into trunk mode."
       portchannelencapsulationtype = should[:portchannelencapsulationtype]
-      addmembertotrunkvlan(id,portchannel,portchannelencapsulationtype)
+      addmembertotrunkvlan(id, portchannel, portchannelencapsulationtype)
     else
       Puppet.info "A port channel #{portchannel} is being configured into access mode."
       execute("switchport mode access")
@@ -859,20 +900,20 @@ class PuppetX::Cisconexus5k::Transport
     return
   end
 
-  def addmembertotrunkvlan(vlanid,portchannelid,portchannelencapsulationtype)
+  def addmembertotrunkvlan(vlanid, portchannelid, portchannelencapsulationtype)
     portchannel = "po#{portchannelid}"
     Puppet.info("The encapsulationtype for portchannel #{portchannelid} is being retrieved.")
-    updateencapsulationtype = getencapsulationtype(portchannel,portchannelencapsulationtype)
+    updateencapsulationtype = getencapsulationtype(portchannel, portchannelencapsulationtype)
     responseportchannel = execute("show interface #{portchannel} trunk")
-    if ( responseportchannel =~ /Invalid/ )
+    if (responseportchannel =~ /Invalid/)
       Puppet.info("The trunking feature is not already configured for  the port channel #{interfaceid}. Configure trunking feature on this interface.")
       return
     end
     Puppet.info("The trunk port channel status for portchannel #{portchannel} is being retrieved.")
     interfacestatus = gettrunkinterfacestatus(responseportchannel)
-    if ( interfacestatus != "trunking" )
+    if (interfacestatus != "trunking")
       execute("switchport")
-      if ( updateencapsulationtype != "" )
+      if (updateencapsulationtype != "")
         execute("switchport trunk encapsulation #{updateencapsulationtype}")
       end
       execute("switchport mode trunk")
@@ -901,13 +942,13 @@ class PuppetX::Cisconexus5k::Transport
       Puppet.debug "conf t"
       out = execute("zone name #{id} vsan #{vsanid}")
       Puppet.debug "zone name #{id} vsan #{vsanid}"
-      if ( out =~/Illegal/ )
+      if (out =~/Illegal/)
         raise "The zone name #{id} is not valid on the switch"
       end
-      if ( out =~ /% Invalid/ )
+      if (out =~ /% Invalid/)
         raise "The VSAN Id #{vsanid} is not valid on the switch"
       end
-      if ( out =~ /not configured/ )
+      if (out =~ /not configured/)
         raise "The VSAN Id #{vsanid} is not valid on the switch"
       end
       mem.each do |memberval|
@@ -923,7 +964,7 @@ class PuppetX::Cisconexus5k::Transport
       lines = out.split("\n")
       lines.shift; lines.pop
       outputlength = lines.length
-      if ( outputlength == 1 )
+      if (outputlength == 1)
         #No last member need to remove the zone"
         execute("no zone name #{id} vsan #{vsanid}")
         Puppet.debug "no zone name #{id} vsan #{vsanid}"
@@ -938,19 +979,19 @@ class PuppetX::Cisconexus5k::Transport
     Puppet.debug "conf t"
     out = execute("zone name #{id} vsan #{vsanid}")
     Puppet.debug "zone name #{id} vsan #{vsanid}"
-    if ( out =~/Illegal/ )
+    if (out =~/Illegal/)
       raise "The zone name #{id} is not valid on the switch"
     end
-    if ( out =~ /% Invalid/ )
+    if (out =~ /% Invalid/)
       raise "The VSAN Id #{vsanid} is not valid on the switch"
     end
-    if ( out =~ /not configured/ )
+    if (out =~ /not configured/)
       raise "The VSAN Id #{vsanid} is not valid on the switch"
     end
     mem.each do |memberval|
-      out =  execute("member #{membertype} #{memberval}")
+      out = execute("member #{membertype} #{memberval}")
       Puppet.debug "member #{membertype} #{memberval}"
-      if ( out =~ /% Invalid/ )
+      if (out =~ /% Invalid/)
         raise "The command input #{memberval} is invalid"
       end
     end
