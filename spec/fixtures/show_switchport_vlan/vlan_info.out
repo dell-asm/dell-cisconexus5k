@@ -1,0 +1,11 @@
+!Command: show running-config interface Ethernet1/19
+!Time: Sat Apr 16 18:50:56 2016
+
+version 7.1(1)N1(1)
+
+interface Ethernet1/19
+  description R620 1NSXFX1
+  switchport mode trunk
+  switchport trunk native vlan 18
+  switchport trunk allowed vlan 18,20,23-24,29,1003
+  spanning-tree port type edge trunk
