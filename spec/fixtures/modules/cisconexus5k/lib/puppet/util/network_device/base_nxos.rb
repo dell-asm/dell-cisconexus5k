@@ -12,8 +12,7 @@ class Puppet::Util::NetworkDevice::Base_nxos
 
     @autoloader = Puppet::Util::Autoload.new(
       self,
-      "puppet/util/network_device/transport",
-      :wrap => false
+      "puppet/util/network_device/transport"
     )
 
     if @autoloader.load(@url.scheme)
