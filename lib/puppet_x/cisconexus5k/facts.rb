@@ -36,7 +36,7 @@ class PuppetX::Cisconexus5k::Facts
       if (line =~ /system\ image\ file\ is:\s+(\S+)/)
         facts["systemimage"] = $1
       end
-      if (line =~ /cisco\s+(\S+)\s+Chassis/)
+      if (line =~ /cisco\s+(\S+)\s+Chassis/) || (line =~ /cisco\s+(\S+)\s+\S+\s+chassis/)
         facts["model"] = $1
       end
       if (line =~ /Device\s+name:\s+(\S+)/)
