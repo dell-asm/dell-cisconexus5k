@@ -171,8 +171,8 @@ class PuppetX::Cisconexus5k::Facts
         line.match(/^.+?:.+/)
       end.map do |line|
         line.chomp!
-        line.split(/:\s/)
-      end]
+        line.split(/:\s/) unless line.match(/(:\s.*){2,}/)
+      end.compact]
 
       next if entry.empty?
 

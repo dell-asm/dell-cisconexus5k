@@ -7,6 +7,7 @@ describe PuppetX::Cisconexus5k::Facts do
   let(:facts) {PuppetX::Cisconexus5k::Facts.new(nil)}
   let(:sh_vlan_ouput) { File.read(File.join(fact_fixtures,"sh_vlan.out"))}
   let(:sh_int_trunk_output) { File.read(File.join(fact_fixtures,"sh_int_trunk.out"))}
+  let(:lldp_info) {File.read(File.join(fact_fixtures,"lldp_info.out"))}
   let(:certname) { "cisconexus5k-172.17.7.15" }
   let(:options) { {'host' => "172.17.7.15", 'user' => "admin", 'password' => "P@ssw0rd"} }
   let(:transport) { PuppetX::Cisconexus5k::Transport.new(certname, options) }
@@ -34,9 +35,11 @@ describe PuppetX::Cisconexus5k::Facts do
     let(:facts) {PuppetX::Cisconexus5k::Facts.new(transport)}
 
     before do
+      # device_config = mock("device_config")
       require 'asm/device_management'
-      ASM::DeviceManagement.stub(:parse_device_config).and_return(device_config)
+      ASM::DeviceManagement.stub(:parse_device_config).and_return(options)
       transport.stub(:command).and_return("rspec rsult mocking")
+      facts.stub(:get_vlan_information)
     end
 
     it "should get cisco 5k model name" do
@@ -47,8 +50,13 @@ describe PuppetX::Cisconexus5k::Facts do
 
     it "should get cisco 9k model name" do
       cisco_9k_model = "cisco Nexus9000 C9372PX chassis"
-     transport.stub(:command).with("sh ver").and_return(cisco_9k_model)
+      transport.stub(:command).with("sh ver").and_return(cisco_9k_model)
       expect(facts.retrieve["model"]).to eq("Nexus9000")
+    end
+
+    it "should get correct lldp neighbors with intercace and mac address" do
+      transport.stub(:command).with("show lldp neighbors detail").and_return(lldp_info)
+      expect(JSON.parse(facts.retrieve[:remote_device_info])).to include({"interface" => "Eth1/52", "location" => "Ethernet1/52", "remote_mac" => "00:d7:8f:2a:b1:4d"})
     end
   end
 end

@@ -1,0 +1,62 @@
+Capability codes:
+  (R) Router, (B) Bridge, (T) Telephone, (C) DOCSIS Cable Device
+  (W) WLAN Access Point, (P) Repeater, (S) Station, (O) Other
+Device ID            Local Intf      Hold-time  Capability  Port ID
+
+Chassis id: 90b1.1c29.5ee5
+Port id: 90b1.1c29.5ee5
+Local Port id: Eth1/3
+Port Description: not advertised
+System Name: not advertised
+System Description: not advertised
+Time remaining: 93 seconds
+System Capabilities: not advertised
+Enabled Capabilities: not advertised
+Management Address: not advertised
+Management Address IPV6: not advertised
+Vlan ID: not advertised
+
+
+Chassis id: 000e.1e7c.4250
+Port id: 000e.1e7c.4250
+Local Port id: Eth1/4
+Port Description: not advertised
+System Name: not advertised
+System Description: not advertised
+Time remaining: 117 seconds
+System Capabilities: not advertised
+Enabled Capabilities: not advertised
+Management Address: not advertised
+Management Address IPV6: not advertised
+Vlan ID: not advertised
+
+
+Chassis id: 00d7.8f2a.b14d
+Port id: Ethernet1/52
+Local Port id: Eth1/52
+Port Description: Ethernet1/52
+System Name: Cisco_9372_RowD_rack4_bot.delllabs.net
+System Description: Cisco Nexus Operating System (NX-OS) Software 7.0(3)I4(1)
+TAC support: http://www.cisco.com/tac
+Copyright (c) 2002-2016, Cisco Systems, Inc. All rights reserved.
+Time remaining: 110 seconds
+System Capabilities: B, R
+Enabled Capabilities: B, R
+Management Address: 100.68.69.125
+Management Address IPV6: 00d7.8f2a.b14d
+Vlan ID: 1
+
+
+Chassis id: 4c76.25e9.0ac0
+Port id: fortyGigE 1/13/1
+Local Port id: Eth1/54
+Port Description: not advertised
+System Name: PGNET-CET-RowC_D-Z9100_2
+System Description: Dell Real Time Operating System Software. Dell Operating System Version: 2.0. Dell Application Software Version: 9.11(0.0P2) Copyright (c) 1999-2016Dell Inc. All Righ
+ts Reserved.Build Time: Tue Dec 13 00:15:53 2016
+Time remaining: 97 seconds
+System Capabilities: P, B, R
+Enabled Capabilities: P, B, R
+Management Address: not advertised
+Management Address IPV6: not advertised
+Vlan ID: not advertised
