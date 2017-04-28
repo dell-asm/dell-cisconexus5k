@@ -2,11 +2,8 @@ require 'pp'
 require 'puppet'
 require 'puppet/util'
 require 'puppet_x/cisconexus5k/facts'
-#require '/etc/puppetlabs/puppet/modules/asm_lib/lib/security/encode'
 require 'puppet/util/autoload'
 require 'uri'
-require 'puppet/util/network_device/transport'
-require 'puppet/util/network_device/transport/base'
 
 #
 # Main device class for Cisco nexus5k module

@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 describe Puppet::Type.type(:alias) do
-  alias_conf = YAML.load_file(get_configpath('cisconexus5k','alias_config.yml'))
+  alias_conf = YAML.load_file(PuppetSpec.fixture_path("integrationconfig/alias_config.yml"))
   alias_attrib = alias_conf['alias_configuration_type']
   let(:title) { 'alias' }
   #++++++++++++++++++++++++++++++++++++++++++++++++++++

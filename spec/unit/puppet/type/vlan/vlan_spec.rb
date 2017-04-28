@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 describe Puppet::Type.type(:vlan) do
-  vlan_conf = YAML.load_file(get_configpath('cisconexus5k','vlan_config.yml'))
+  vlan_conf = YAML.load_file(PuppetSpec.fixture_path("integrationconfig/vlan_config.yml"))
   vlan_attrib = vlan_conf['vlan_configuration_type']
   let(:title) { 'vlan' }
   #++++++++++++++++++++++++++++++++++++++++++++++++++++

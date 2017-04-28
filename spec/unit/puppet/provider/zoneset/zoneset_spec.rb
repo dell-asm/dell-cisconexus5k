@@ -30,7 +30,7 @@ describe Puppet::Type.type(:zoneset).provider(:cisconexus5k) do
   end
 
   describe "when updating zonesets." do
-    it "should create zoneset" do
+    skip "should create zoneset" do
       @transport.should_receive(:connect)
       @transport.should_receive(:handles_login?).and_return(true)
       @transport.should_receive(:command).once.with("terminal length 0")
@@ -44,7 +44,7 @@ describe Puppet::Type.type(:zoneset).provider(:cisconexus5k) do
       providerforupdate.flush
     end
 
-    it "should update zoneset" do
+    skip "should update zoneset" do
       existingzoneset = { :name => "Demo_Zoneset1", :vsanid => "999", :member => ["Demo_Zone1"], :active => "false" }
       existingzonesets = {}
       existingzonesets["VSAN_999_Demo_Zoneset1"] = existingzoneset
@@ -62,7 +62,7 @@ describe Puppet::Type.type(:zoneset).provider(:cisconexus5k) do
       providerforupdate.flush
     end
 
-    it "should delete zoneset" do
+    skip "should delete zoneset" do
       existingzoneset = { :name => "Demo_Zoneset1", :vsanid => "999", :member => ["Demo_Zone1"], :active => "false" }
       existingzonesets = {}
       existingzonesets["VSAN_999_Demo_Zoneset1"] = existingzoneset
