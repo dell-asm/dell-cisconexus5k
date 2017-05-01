@@ -1,6 +1,9 @@
+require 'pathname'
+
 dir = File.expand_path(File.dirname(__FILE__))
 $LOAD_PATH.unshift File.join(dir, 'spec_lib')
-
+modules_path = File.expand_path(Pathname.new(__FILE__).parent.parent.parent)
+$LOAD_PATH << File.join(modules_path, 'cisconexus5k/lib')
 # Don't want puppet getting the command line arguments for rake or autotest
 ARGV.clear
 

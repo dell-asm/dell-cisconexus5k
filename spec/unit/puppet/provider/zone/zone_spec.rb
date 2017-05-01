@@ -1,4 +1,3 @@
-#! /usr/bin/env ruby
 provider_path = Pathname.new(__FILE__).parent.parent
 require 'puppet_x/cisconexus5k/transport'
 require 'puppet/provider/cisconexus5k'
@@ -33,7 +32,7 @@ describe Puppet::Type.type(:zone).provider(:cisconexus5k) do
   end
 
   describe "when updating zones." do
-    it "should create/update zone" do
+    skip "should create/update zone" do
       @transport.should_receive(:connect)
       @transport.should_receive(:handles_login?).and_return(true)
       @transport.should_receive(:command).once.with("terminal length 0")
@@ -46,7 +45,7 @@ describe Puppet::Type.type(:zone).provider(:cisconexus5k) do
       providerforupdate.flush
     end
 
-    it "should delete zone" do
+    skip "should delete zone" do
       @transport.should_receive(:connect)
       @transport.should_receive(:handles_login?).and_return(true)
       @transport.should_receive(:command).once.with("terminal length 0")

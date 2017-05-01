@@ -5,7 +5,7 @@ require 'pry'
 
 describe PuppetX::Cisconexus5k::Transport do
   let(:certname) { "cisconexus5k-172.17.7.15" }
-  let(:options) { {'host' => "172.17.7.15", 'user' => "admin", 'password' => "P@ssw0rd"} }
+  let(:options) { {:device_config=>{:scheme=>"ssh", :host=>"172.17.11.13", :port=>22, :password=>"P@ssw0rd", :user=>"admin"}} }
   let(:transport) { PuppetX::Cisconexus5k::Transport.new(certname, options) }
   let(:interfaceid) { "Eth1/19" }
 

@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'puppet_x/cisconexus5k/facts'
 require 'puppet_x/cisconexus5k/transport'
+require 'puppet/util/network_device/transport/ssh'
 
 describe PuppetX::Cisconexus5k::Facts do
   let(:fact_fixtures) {File.join(PuppetSpec::FIXTURE_DIR,"unit","puppet_x","cisconexus5k")}
@@ -9,7 +10,7 @@ describe PuppetX::Cisconexus5k::Facts do
   let(:sh_int_trunk_output) { File.read(File.join(fact_fixtures,"sh_int_trunk.out"))}
   let(:lldp_info) {File.read(File.join(fact_fixtures,"lldp_info.out"))}
   let(:certname) { "cisconexus5k-172.17.7.15" }
-  let(:options) { {'host' => "172.17.7.15", 'user' => "admin", 'password' => "P@ssw0rd"} }
+  let(:options) { {:device_config=>{:scheme=>"ssh", :host=>"172.17.11.13", :port=>22, :password=>"P@ssw0rd", :user=>"admin"}} }
   let(:transport) { PuppetX::Cisconexus5k::Transport.new(certname, options) }
 
   describe "#get_vlan_information" do
@@ -37,7 +38,7 @@ describe PuppetX::Cisconexus5k::Facts do
     before do
       # device_config = mock("device_config")
       require 'asm/device_management'
-      ASM::DeviceManagement.stub(:parse_device_config).and_return(options)
+      ASM::DeviceManagement.stub(:parse_device_config).and_return(options[:device_config])
       transport.stub(:command).and_return("rspec rsult mocking")
       facts.stub(:get_vlan_information)
     end

@@ -3,7 +3,8 @@
 require 'spec_helper'
 
 describe Puppet::Type.type(:zone) do
-  zone_conf = YAML.load_file(get_configpath('cisconexus5k','zone_config.yml'))
+
+  zone_conf = YAML.load_file(PuppetSpec.fixture_path("integrationconfig/zone_config.yml"))
   zone_attrib = zone_conf['zone_configuration_type']
   let(:title) { 'zone' }
   #++++++++++++++++++++++++++++++++++++++++++++++++++++
