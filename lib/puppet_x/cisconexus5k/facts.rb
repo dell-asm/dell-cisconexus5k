@@ -15,7 +15,8 @@ class PuppetX::Cisconexus5k::Facts
     @transport = transport
   end
 
-  def retrieve
+  def
+  retrieve
     facts = {}
 
     out = @transport.command("sh ver")
