@@ -172,6 +172,9 @@ class PuppetX::Cisconexus5k::Transport
     command do |ng|
       facts = @facts.retrieve
     end
+
+    require 'pry'
+    binding.pry
     facts
   end
 
