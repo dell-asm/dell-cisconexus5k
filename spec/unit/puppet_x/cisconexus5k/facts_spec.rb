@@ -49,6 +49,12 @@ describe PuppetX::Cisconexus5k::Facts do
       expect(facts.retrieve["model"]).to eq("Nexus5548")
     end
 
+    it "should get cisco 3k model name" do
+      cisco_3k_model = "cisco Nexus 3172T Chassis"
+      transport.stub(:command).with("sh ver").and_return(cisco_3k_model)
+      expect(facts.retrieve["model"]).to eq("Nexus3172T")
+    end
+
     it "should get cisco 9k model name" do
       cisco_9k_model = "cisco Nexus9000 C9372PX chassis"
       transport.stub(:command).with("sh ver").and_return(cisco_9k_model)
