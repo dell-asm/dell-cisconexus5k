@@ -5,7 +5,7 @@ group :development, :test do
   gem 'rspec', '~>3.4.0', :require => false
   gem 'puppetlabs_spec_helper', '0.4.1', :require => false
   gem 'json_pure', '2.0.1'
-  gem 'nokogiri', '1.8.1'
+  gem 'nokogiri', '~>1.8.1'
   gem 'hashie'
   gem 'i18n', '0.6.9'
   gem 'dell-asm-util', :git => 'https://github.com/dell-asm/dell-asm-util.git', :branch => 'master'
