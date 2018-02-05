@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 group :development, :test do
-  gem 'rake'
+  gem 'rake', '<11.0'
   gem 'rspec', '~>3.4.0', :require => false
   gem 'puppetlabs_spec_helper', '0.4.1', :require => false
   gem 'json_pure', '2.0.1'
@@ -15,6 +15,6 @@ group :development, :test do
   if puppetversion = ENV['PUPPET_GEM_VERSION']
     gem 'puppet', puppetversion
   else
-    gem 'puppet', '3.6.2'
+    gem 'puppet', '5.3.3'
   end
 end
