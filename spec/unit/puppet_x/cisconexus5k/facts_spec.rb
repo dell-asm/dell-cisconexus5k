@@ -63,7 +63,7 @@ describe PuppetX::Cisconexus5k::Facts do
 
     it "should get correct lldp neighbors with intercace and mac address" do
       transport.stub(:command).with("show lldp neighbors detail").and_return(lldp_info)
-      expect(JSON.parse(facts.retrieve[:remote_device_info])).to include({"interface" => "Eth1/52", "location" => "Ethernet1/52", "remote_mac" => "00:d7:8f:2a:b1:4d"})
+     expect(JSON.parse(facts.retrieve[:remote_device_info])).to include({"interface" => "Eth1/52", "location" => "Ethernet1/52", "remote_mac" => "00:d7:8f:2a:b1:4d"})
     end
   end
 end

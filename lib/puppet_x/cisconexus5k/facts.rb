@@ -184,7 +184,7 @@ class PuppetX::Cisconexus5k::Facts
 
       next if entry.empty?
 
-      {:interface => entry["Local Port id"], :location => entry["Port id"], :remote_mac => normalize_mac(entry["Chassis id"])}
+      {:interface => entry["Local Port id"], :location => normalize_mac(entry["Port id"]), :remote_mac => normalize_mac(entry["Chassis id"])}
     end.compact
 
 
@@ -271,9 +271,14 @@ class PuppetX::Cisconexus5k::Facts
 
     facts
   end
+
   # d067.e572.13ce => d0:67:e5:72:13:ce
   def normalize_mac(mac)
-    mac.gsub('.','').scan(/../).join(':') if mac
+    if mac.match(/^\w{4}[.]\w{4}[.]\w{4}/)
+      return mac.gsub('.', '').scan(/../).join(':') if mac
+    end
+
+    mac
   end
 
   def vlan_data
