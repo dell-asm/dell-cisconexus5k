@@ -1,6 +1,6 @@
-#Cisoconexus5k
+# Cisoconexus5k
 
-####Table of Contents
+#### Table of Contents
 
 1. [Overview](#overview)
 2. [VLAN](#vlan)
@@ -8,26 +8,26 @@
 4. [Zone](#zone)
 5. [Zoneset](#zoneset)
 
-##Overview
+## Overview
 
 The cisconexus5k module allows the user to manage VLANs, aliases, zones and zonesets on a Cisco Nexus 5000 series switch. The module uses net-ssh and net-telnet to communicate with the switch.
 
 This module was developed by Dell which is why the name of the repo starts with dell-.   The name dell-cisconexus5k does not imply a partnership, agreement or other special relationship between Dell and Cisco.  Cisco Nexus® is a registered trademark of Cisco Systems, Inc.
 
-##VLAN
+## VLAN
 
-###Description
+### Description
 
 The VLAN type/provider supports the functionality to create and delete the VLANs 
 on the Nexus 5000 switch.
 
-####Summary of Properties
+#### Summary of Properties
 
-#####VLAN properties:
+##### VLAN properties:
 
 1. _vlanname_ - This parameter defines the name of the VLAN to be created.
 
-#####Interface properties:
+##### Interface properties:
 
 1. _interface_ - This parameter defines the interface to be added to the VLAN.
 
@@ -49,7 +49,7 @@ on the Nexus 5000 switch.
 
 10. _removeallassociatedvlans_ - This parameter removes all the associated VLANs. The possible values are true or false. The default value is "true".
 
-#####Portchannel properties:
+##### Portchannel properties:
 
 1. _portchannel_ - This parameter defines the Portchannel to be added.
 
@@ -60,7 +60,7 @@ on the Nexus 5000 switch.
 4. _portchanneloperation_ - This parameter defines the operation to be performed on the portchannel. The possible values are "add" or "remove".
 
 
-####Usage
+#### Usage
 
 The Nexus 5000 module can be used by calling the VLAN type from site.pp, as 
 shown in the example below:
@@ -89,11 +89,11 @@ shown in the example below:
 
 The alias type supports the functionality to create and delete aliases on the Cisco nexus switch.
 
-####Summary of properties
+#### Summary of properties
 
 1. _member_ - This is the WWPN of the member that is to be added to the alias
 
-####Usage
+#### Usage
 
 Aliases can be created using the following manifest
 
@@ -104,19 +104,19 @@ Aliases can be created using the following manifest
     }
 ```
 
-##Zone
+## Zone
 
 - Create zones
 - Delete zones
 - Add members to zones
 - Remove members from zones
 
-###Description
+### Description
 
 The zone type/provider supports functionality to create and delete zones on the 
 Nexus 5000 switch. 
 
-####Summary of Properties
+#### Summary of Properties
 
 1. _member_ - This parameter defines the comma seperated list of members to be added to the zone.
 
@@ -124,7 +124,7 @@ Nexus 5000 switch.
 
 3. _vsanid_ - This parameter defines the VSAN Id for the zone.
     
-####Usage
+#### Usage
 
 The Nexus 5000 module can be used by calling the zone type from the site.pp, as 
 shown in the example below:
@@ -137,14 +137,14 @@ shown in the example below:
       		ensure => "present"
   	}
 
-##Zoneset
+## Zoneset
 
-###Description
+### Description
 
 The zoneset type/provider supports the functionality to create and delete 
 zonesets on the Nexus 5000 switch. 
 
-####Summary of Properties
+#### Summary of Properties
 
 1. _member_ - (Optional) This parameter defines the comma separated list of member zones for the zoneset. If this parameter is omitted then the existing zoneset members will not be affected.
     
@@ -154,7 +154,7 @@ zonesets on the Nexus 5000 switch.
     
 4. _force_ - (Optional)	This parameter defines whether or not to forcefully activate the given zoneset, if another zoneset is already active on the given VSAN. The valid values are "true" or "false". This parameter must be used with the "active" parameter.
     
-####Usage
+#### Usage
 
 The Nexus 5000 module can be used by calling the zoneset type from site.pp, as 
 shown in the example below:
