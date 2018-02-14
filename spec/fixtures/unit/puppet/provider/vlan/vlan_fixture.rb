@@ -45,5 +45,4 @@ class Vlan_fixture
     :portchannelencapsulationtype   => 'dot1q'
     )
   end
-
 end

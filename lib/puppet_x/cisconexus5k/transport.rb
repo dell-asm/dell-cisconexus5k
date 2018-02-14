@@ -184,22 +184,62 @@ class PuppetX::Cisconexus5k::Transport
     lines.each do |line|
       case line
         # vlan    name    status
-      when /^(\d+)\s+(\w+)\s+(\w+)\s+([a-zA-Z0-9,\/. ]+)\s*$/
-        vlan = {:name => $1, :vlanname => $2, :status => $3, :interfaces => []}
-        if $4.strip.length > 0
-          vlan[:interfaces] = $4.strip.split(/\s*,\s*/)
-        end
-        vlans[vlan[:name]] = vlan
-      when /^\s+([a-zA-Z0-9,\/. ]+)\s*$/
-        raise "Invalid show vlan summary output" unless vlan
-        if $1.strip.length > 0
-          vlan[:interfaces] += $1.strip.split(/\s*,\s*/)
-        end
+        when /^(\d+)\s+(\w+)\s+(\w+)\s+([a-zA-Z0-9,\/. ]+)\s*$/
+          vlan = {:name => $1, :vlanname => $2, :status => $3, :interfaces => []}
+          if $4.strip.length > 0
+            vlan[:interfaces] = $4.strip.split(/\s*,\s*/)
+          end
+          vlans[vlan[:name]] = vlan
+        when /^\s+([a-zA-Z0-9,\/. ]+)\s*$/
+          raise "Invalid show vlan summary output" unless vlan
+          if $1.strip.length > 0
+            vlan[:interfaces] += $1.strip.split(/\s*,\s*/)
+          end
         else
           next
-        end
       end
+    end
+
     vlans
+  end
+
+  def parse_interfaces(interface)
+    interface_config = {:switchport_mode => nil, :port_channel => nil, :untagged_general_vlans => nil, :tagged_general_vlans => nil, :access_vlan => nil}
+    interface_result = execute("show running-config interface ethernet #{interface.match(/Eth(\S+)/)[1]}")
+
+    interface_result.split("\n").each {|line|
+
+      if line.match(/switchport\s([^mode]\w+)/)
+        interface_config[:switchport_mode] = $1
+      end
+
+      if line.match(/channel-group\s(\w+)/)
+        interface_config[:port_channel] = $1
+      end
+
+      interface_config[:access_vlan] = $1 if line.match(/switchport access vlan\s(\d+)/)
+
+      interface_config[:untagged_general_vlans] = $1 if line.match(/switchport trunk native vlan (\d+)/)
+
+      interface_config[:tagged_general_vlans] = $1 if line.match(/switchport trunk allowed vlan\s(\S+)/)
+    }
+
+    {interface => interface_config}
+  end
+
+  def parse_port_channels
+    port_channels = {}
+    port_channel_res = execute("show port-channel summary")
+    lines = port_channel_res.split("\n")
+    lines.each do |line|
+
+      if (line.match(/^(\d+)\s+\w+(\S+\s+){2}(\w+)\s+(.*)/))
+        port_channel = {:name => $1, :protocol => $3, :interfaces => $4}
+        port_channels[port_channel[:name]] = port_channel
+      end
+    end
+
+    port_channels
   end
 
   def parse_vsans
@@ -410,105 +450,181 @@ class PuppetX::Cisconexus5k::Transport
     execute("exit")
   end
 
-  def update_interface(id, is = {}, should = {}, interfaceid = {}, nativevlanid={}, istrunk = {}, encapsulationtype={}, isnative={}, deletenativevlaninformation={}, unconfiguretrunkmode={},
-                       shutdownswitchinterface={}, interfaceoperation={}, removeallassociatedvlans={}, ensureabsent=':absent')
-    Puppet.debug("Performing the update interfaces for Cisco Nexus")
-    responseinterface = execute("show interface #{interfaceid}")
-    if (responseinterface =~ /Invalid/)
-      raise "The interface #{interfaceid} does not exist on the switch."
+  def update_interface(resource, is = {}, should = {}, interface_id = {}, is_native = {})
+    if is_native || is_native == "true"
+      native_vlan_id = Integer(resource[:untagged_general_vlans]) if resource[:untagged_general_vlans]
     end
-    if should[:ensure] == :absent || interfaceoperation == "remove" || ensureabsent == :absent
-      Puppet.info "The interface #{interfaceid} is being removed from the VLAN #{id}."
+
+    Puppet.debug("Performing the update interfaces for Cisco Nexus")
+    responseinterface = execute("show interface #{interface_id}")
+    if responseinterface =~ /Invalid/
+      raise "The interface #{interface_id} does not exist on the switch."
+    end
+
+    if should[:ensure] == :absent || resource[:interfaceoperation] || resource[:ensure] == :absent
+      Puppet.info "The interface #{interface_id} is getting unconfigured or removed."
       execute("conf t")
-      execute("interface #{interfaceid}")
-      if istrunk == "true"
-        responsetrunk = execute("show interface #{interfaceid} trunk")
-        if (responsetrunk =~ /Invalid/)
-          Puppet.info("The trunking is not configured on the interface #{interfaceid}.")
+      execute("interface #{interface_id}")
+      if resource[:istrunkforinterface] == "true"
+        responsetrunk = execute("show interface #{interface_id} trunk")
+        if responsetrunk =~ /Invalid/
+          Puppet.info("The trunking is not configured on the interface #{interface_id}.")
           return
         end
         interfacestatus = gettrunkinterfacestatus(responsetrunk)
-        if (interfacestatus != "trunking")
-          Puppet.info "The interface #{interfaceid} is in access mode."
+        if interfacestatus != "trunking"
+          Puppet.info "The interface #{interface_id} is in access mode."
           return
         end
-        Puppet.info "The interface #{interfaceid} is in trunk mode."
-        if deletenativevlaninformation == "true"
+        Puppet.info "The interface #{interface_id} is in trunk mode."
+        if resource[:deletenativevlaninformation] == "true"
           Puppet.info "The native VLAN information is being deleted."
-          execute("no switchport trunk native vlan #{nativevlanid}")
+          execute("no switchport trunk native vlan #{native_vlan_id}")
         end
-        execute("switchport trunk allowed vlan remove #{id}")
-        if unconfiguretrunkmode == "true"
+        if resource[:removeallassociatedvlans] == "true"
+          Puppet.info("The associated VLANs are being deleted.")
+          execute("no switchport trunk allowed vlan")
+        else
+          execute("switchport trunk allowed vlan remove #{resource[:tagged_general_vlans]}")
+        end
+        if resource[:unconfiguretrunkmode] == "true" || resource[:istrunkforinterface] != "true"
           Puppet.info "The trunk mode is being unconfigured."
           execute("no switchport mode trunk")
         end
-        if shutdownswitchinterface == "true" && unconfiguretrunkmode == "false"
-          Puppet.info "The interface #{interfaceid} is being shut down."
+        Puppet.info "removing port channel."
+        execute("no channel-group")
+        Puppet.info "removing spanning tree."
+        execute("no spanning-tree port type")
+        execute("no speed")
+        execute("no mtu")
+        if resource[:shutdownswitchinterface] == "true" && resource[:unconfiguretrunkmode] == "false"
+          Puppet.info "The interface #{interface_id} is being shut down."
           execute("shutdown")
         end
       else
-        Puppet.info "The interface #{interfaceid} is in access mode."
-        execute("no switchport access vlan #{id}")
-        execute("no switchport mode access")
-        execute("shutdown")
+        Puppet.info "The interface #{interface_id} is in access mode and it is being removed"
+        un_configure_access_port(resource[:access_vlan])
       end
       execute("exit")
       execute("exit")
-      return
+    else
+      configure_interface_port(resource, is, should, interface_id, is_native, native_vlan_id)
     end
+  end
 
+  def configure_interface_port(resource, is = {}, should = {}, interface_id = {}, is_native = {}, native_vlan_id)
     # We're creating or updating an entry
     execute("conf t")
-    execute("interface #{interfaceid}")
-    if istrunk == "true"
+    execute("interface #{interface_id}")
+    if resource[:istrunkforinterface] == "true"
       Puppet.debug("Verify whether or not the specified interface is already configured as a trunk interface.")
-      responsetrunk = execute("show interface #{interfaceid} trunk")
-      if (responsetrunk =~ /Invalid/)
-        Puppet.info("The trunking feature is not already configured for  the interface #{interfaceid}. Configure trunking feature on this interface.")
+      responsetrunk = execute("show interface #{interface_id} trunk")
+
+      unless is[:port_channel].nil?
+        execute("no channel-group")
+      end
+
+      if responsetrunk =~ /Invalid/
+        Puppet.info("The trunking feature is not already configured for  the interface #{interface_id}. Configure trunking feature on this interface.")
         return
       end
-      Puppet.info("The trunk interface status for #{interfaceid} is being retrieved.")
+      Puppet.info("The trunk interface status for #{interface_id} is being retrieved.")
       interfacestatus = gettrunkinterfacestatus(responsetrunk)
-      Puppet.info("The encapsulationtype for the interface #{interfaceid} is being retrieved.")
-      updateencapsulationtype = getencapsulationtype(interfaceid, encapsulationtype)
-      if (interfacestatus != "trunking")
+      Puppet.info("The encapsulationtype for the interface #{interface_id} is being retrieved.")
+      updateencapsulationtype = getencapsulationtype(interface_id, resource[:interfaceencapsulationtype])
+      if interfacestatus != "trunking"
         execute("switchport")
-        if (updateencapsulationtype != "")
+        if updateencapsulationtype != ""
           execute("switchport trunk encapsulation #{updateencapsulationtype}")
         end
         execute("switchport mode trunk")
       end
-      if removeallassociatedvlans == "true"
+      if resource[:removeallassociatedvlans] == "true"
         Puppet.info("The associated VLANs are being deleted.")
         execute("switchport trunk allowed vlan none")
       end
-      if isnative == "true"
-        Puppet.info("A switch interface with a native VLAN is being configured.")
-        Puppet.debug("Command: 'switchport trunk native vlan #{nativevlanid}'")
-        execute("switchport trunk native vlan #{nativevlanid}")
-        execute("switchport trunk allowed vlan add #{id}")
-        execute("no shutdown")
-      elsif isnative == "false"
-        Puppet.info("Need to remove the native vlan configuration.")
-        Puppet.debug("Command: 'no switchport trunk native vlan #{nativevlanid}'")
-        execute("no switchport trunk native vlan #{nativevlanid}")
-        # add functions here
-        tagged_vlans = show_vlans(interfaceid)
-        update_tagged_vlans(id, interfaceid, tagged_vlans)
-        execute("no shutdown")
+
+      if resource[:deletenativevlaninformation] == "true"
+        Puppet.info "The native VLAN information is being deleted."
+        execute("no switchport trunk native vlan")
       end
-      execute("switchport trunk allowed vlan add #{id}")
-      execute("no shutdown")
+
+      if is_native == "true" || is_native == :true
+        if native_vlan_id
+          Puppet.info("A switch interface with a native VLAN is being configured.")
+          Puppet.debug("Command: 'switchport trunk native vlan #{native_vlan_id}'")
+          execute("switchport trunk native vlan #{native_vlan_id}")
+        end
+      elsif is_native == "false" || is_native == :false
+        Puppet.info("Need to remove the native vlan configuration.")
+        Puppet.debug("Command: 'no switchport trunk native vlan #{native_vlan_id}'")
+        execute("no switchport trunk native vlan #{native_vlan_id}")
+      end
+
+      if is[:tagged_general_vlans].nil?
+        execute("switchport trunk allowed vlan #{resource[:tagged_general_vlans]}")
+      else
+        execute("switchport trunk allowed vlan add #{resource[:tagged_general_vlans]}")
+      end
+
+      if should[:mtu] && should[:speed]
+        execute("speed #{should[:speed]}")
+        execute("mtu #{should[:mtu]}")
+      end
+      add_port_channel_interface(should, resource[:is_lacp], resource[:port_channel])
     else
-      Puppet.info "The interface #{interfaceid} is being configured into access mode."
-      execute("switchport")
-      execute("switchport mode access")
-      execute("switchport access vlan #{id}")
-      execute("no shutdown")
+      Puppet.info "removing existing vlans if present from interface port #{interface_id}"
+      if resource[:istrunkforinterface] == "false"
+        Puppet.info "The trunk mode is being unconfigured."
+        execute("no switchport mode trunk")
+      end
+
+      if resource[:removeallassociatedvlans] == "true"
+        Puppet.info("The trunk VLANs are being deleted.")
+        execute("no switchport trunk allowed vlan")
+      end
+
+      if resource[:deletenativevlaninformation] == "true"
+        Puppet.info "The native VLAN information is being deleted."
+        execute("no switchport trunk native vlan")
+      end
+      Puppet.info "The interface #{interface_id} is being configured into access mode."
+      configure_access_port(should, resource[:access_vlan])
+      add_port_channel_interface(should, resource[:is_lacp], resource[:port_channel])
     end
     execute("exit")
     execute("exit")
-    return
+    nil
+  end
+
+  def un_configure_access_port(access_vlan)
+    execute("no switchport access vlan #{access_vlan}")
+    execute("no channel-group")
+    execute("no switchport mode access")
+    execute("no speed")
+    execute("no mtu")
+    execute("shutdown")
+  end
+
+  def configure_access_port(should, access_vlan)
+    execute("switchport")
+    execute("switchport mode access")
+    execute("switchport access vlan #{access_vlan}")
+    if should[:mtu] && should[:speed]
+      execute("speed #{should[:speed]}")
+      execute("mtu #{should[:mtu]}")
+    end
+  end
+
+  def add_port_channel_interface(should, is_lacp, port_channel)
+    if should[:port_channel]
+      if is_lacp == :true || is_lacp == "true"
+        execute("channel-group #{port_channel} mode active")
+      else
+        execute("channel-group #{port_channel}")
+      end
+    end
+    execute("no shutdown")
   end
 
   def show_vlans(interfaceid)
@@ -855,25 +971,21 @@ class PuppetX::Cisconexus5k::Transport
     return trunk
   end
 
-  def update_portchannel(id, is = {}, should = {}, portchannel = {}, istrunkforportchannel = {}, portchanneloperation = {}, ensureabsent=':absent')
+  def update_port_channel(tagged_vlan, untagged_vlan, access_vlan, is = {}, should = {}, portchannel = {}, is_trunk_portchannel = {}, portchanneloperation = {}, ensureabsent=':absent')
     if portchannel !~ /\d/
       Puppet.info("The port channel #{portchannel} should be numeric value.")
       return
     end
     pchannel = "po#{portchannel}"
     responsepchannel = execute("show interface #{pchannel}")
-    if (responsepchannel =~ /Invalid/)
-      raise "A port channel #{portchannel} does not exist on the switch."
-      return
+    if responsepchannel =~ /Invalid/
+      Puppet.debug "A port channel #{portchannel} does not exist."
+      return if ensureabsent == :absent
     end
     if should[:ensure] == :absent || portchanneloperation == "remove" || ensureabsent == :absent
-      Puppet.info "A port channel #{portchannel} is being deleted from the device VLAN #{id}."
+      Puppet.info "A port channel #{portchannel} is being deleted from the device VLAN"
       execute("conf t")
-      execute("interface port-channel #{portchannel}")
-      if (istrunkforportchannel == "true")
-        execute("switchport trunk allowed vlan remove #{id}")
-      end
-      execute("no switchport access vlan #{id}")
+      execute("no interface port-channel #{portchannel}")
       execute("exit")
       return
     end
@@ -882,52 +994,94 @@ class PuppetX::Cisconexus5k::Transport
     execute("conf t")
     execute("interface port-channel #{portchannel}")
     execute("switchport")
-    if (istrunkforportchannel == "true")
+    if is_trunk_portchannel  == "true"
       Puppet.info "A port channel #{portchannel} is being configured into trunk mode."
-      portchannelencapsulationtype = should[:portchannelencapsulationtype]
-      addmembertotrunkvlan(id, portchannel, portchannelencapsulationtype)
+
+      if should[:removeallassociatedvlans] == "true"
+        Puppet.info("The associated VLANs are being deleted.")
+        execute("switchport trunk allowed vlan none")
+      end
+
+      if should[:deletenativevlaninformation] == "true"
+        Puppet.info("The native VLAN is being deleted.")
+        execute("no switchport trunk native vlan")
+      end
+
+      # for now portchannel defaults to dot1q
+      portchannelencapsulationtype = "dot1q"
+      addmembertotrunkvlan(tagged_vlan, untagged_vlan, portchannel, portchannelencapsulationtype)
+
+      if should[:vpc]
+        execute(" no vpc") if !is[:vpc].nil?
+        if is[:vpc] != should[:vpc]
+          execute("vpc #{should[:vpc]}")
+        end
+      end
+
+      if should[:mtu] && should[:speed]
+        execute("speed #{should[:speed]}")
+        execute("mtu #{should[:mtu]}")
+      end
     else
       Puppet.info "A port channel #{portchannel} is being configured into access mode."
       execute("switchport mode access")
-      execute("switcport access vlan #{id}")
+      execute("switcport access vlan #{access_vlan}")
+      if should[:vpc]
+        execute(" no vpc") if !is[:vpc].nil?
+        if is[:vpc] != should[:vpc]
+          execute("vpc #{should[:vpc]}")
+        end
+      end
+
+      if should[:mtu] && should[:speed]
+        execute("speed #{should[:speed]}")
+        execute("mtu #{should[:mtu]}")
+      end
     end
     execute("no shutdown")
     execute("exit")
     execute("exit")
-    return
+    nil
   end
 
-  def addmembertotrunkvlan(vlanid, portchannelid, portchannelencapsulationtype)
+  def addmembertotrunkvlan(taggedvlans, un_tagged, portchannelid, portchannelencapsulationtype)
     portchannel = "po#{portchannelid}"
     Puppet.info("The encapsulationtype for portchannel #{portchannelid} is being retrieved.")
     updateencapsulationtype = getencapsulationtype(portchannel, portchannelencapsulationtype)
     responseportchannel = execute("show interface #{portchannel} trunk")
-    if (responseportchannel =~ /Invalid/)
+    if responseportchannel =~ /Invalid/
       Puppet.info("The trunking feature is not already configured for  the port channel #{interfaceid}. Configure trunking feature on this interface.")
       return
     end
     Puppet.info("The trunk port channel status for portchannel #{portchannel} is being retrieved.")
     interfacestatus = gettrunkinterfacestatus(responseportchannel)
-    if (interfacestatus != "trunking")
+
+    if interfacestatus != "trunking"
       execute("switchport")
-      if (updateencapsulationtype != "")
+      if updateencapsulationtype != ""
         execute("switchport trunk encapsulation #{updateencapsulationtype}")
       end
       execute("switchport mode trunk")
     end
+
     notaddedtoanyvlan = "false"
     out = execute("show interface #{portchannel} switchport")
+
     if out =~ /Trunking VLANs Allowed:\s(\S+)\s/
       trunkportvlanid = $1
     end
-    if (trunkportvlanid.length == 0 || trunkportvlanid == "NONE")
+    if (trunkportvlanid.length == 0 || trunkportvlanid == "1-4094" || trunkportvlanid == "NONE")
       notaddedtoanyvlan = "true"
     end
+
     if notaddedtoanyvlan == "true"
-      execute("switchport trunk allowed vlan #{vlanid}")
+      execute("switchport trunk allowed vlan #{taggedvlans}")
     else
-      execute("switchport trunk allowed vlan add #{vlanid}")
+      execute("switchport trunk allowed vlan add #{taggedvlans}")
     end
+
+    execute("switchport trunk native vlan #{un_tagged}") if un_tagged
+
     return
   end
 
@@ -939,13 +1093,13 @@ class PuppetX::Cisconexus5k::Transport
       Puppet.debug "conf t"
       out = execute("zone name #{id} vsan #{vsanid}")
       Puppet.debug "zone name #{id} vsan #{vsanid}"
-      if (out =~/Illegal/)
+      if out =~/Illegal/
         raise "The zone name #{id} is not valid on the switch"
       end
-      if (out =~ /% Invalid/)
+      if out =~ /% Invalid/
         raise "The VSAN Id #{vsanid} is not valid on the switch"
       end
-      if (out =~ /not configured/)
+      if out =~ /not configured/
         raise "The VSAN Id #{vsanid} is not valid on the switch"
       end
       mem.each do |memberval|
@@ -961,7 +1115,7 @@ class PuppetX::Cisconexus5k::Transport
       lines = out.split("\n")
       lines.shift; lines.pop
       outputlength = lines.length
-      if (outputlength == 1)
+      if outputlength == 1
         #No last member need to remove the zone"
         execute("no zone name #{id} vsan #{vsanid}")
         Puppet.debug "no zone name #{id} vsan #{vsanid}"

@@ -46,7 +46,23 @@ Puppet::Type.newtype(:cisconexus5k_interface) do
 
   newproperty(:switchport_mode) do
     desc "Configure the VLAN membership mode of an interface. Valid values are access, trunk, or general."
-    newvalues(:trunk)
+    newvalues(:trunk, :access)
+  end
+
+  newproperty(:mtu) do
+    desc "MTU value"
+    defaultto(:absent)
+    newvalues(:absent, /^\d+$/)
+    validate do |value|
+      return if value == :absent
+      raise ArgumentError, "An invalid 'mtu' value is entered. The 'mtu' value must be between 594 and 12000" unless value.to_i >=594 && value.to_i <= 12000
+    end
+  end
+
+  newproperty(:speed) do
+    desc "speed value"
+    defaultto(:absent)
+    newvalues(:absent, /^\d+$/)
   end
 
   newproperty(:shutdown) do
@@ -60,6 +76,28 @@ Puppet::Type.newtype(:cisconexus5k_interface) do
     newvalues("add", "remove")
   end
 
+  newproperty(:port_channel) do
+    desc "Port channel number."
+
+    validate do |value|
+
+      if value !~ /^\d+/
+        raise ArgumentError, "The value of the Port Channel Id must be a positive integer."
+      end
+      if Integer(value) == 0
+        raise ArgumentError, "The entered value of the Post Channel Id 0 is invalid."
+      end
+    end
+  end
+
+  newproperty(:interfaceencapsulationtype) do
+    desc "Encapsulationtype for portchannel."
+    defaultto "dot1q"
+    munge do |value|
+      value.to_s
+    end
+  end
+
   newproperty(:deletenativevlaninformation) do
     desc "Delete native vlan information or not."
     newvalues("true", "false")
@@ -70,6 +108,22 @@ Puppet::Type.newtype(:cisconexus5k_interface) do
         value.to_s
       end
     end
+  end
+
+  newproperty(:access_vlan) do
+    desc "vlan for access port when interface is not in trunk mode"
+    validate do |value|
+      return if value == :absent || value.empty?
+      raise ArgumentError, "Invalid vlan list: #{value}" if value.include?(',') && !(value.split(',').size > 0)
+
+      raise ArgumentError, "There should only one access vlan for access port: #{value}" if value.split(",").size() > 1
+    end
+  end
+
+  newproperty(:is_lacp) do
+    desc "interface port-channel protocol"
+    newvalues("true", "false")
+    defaultto("false")
   end
 
   newproperty(:unconfiguretrunkmode) do
@@ -114,14 +168,6 @@ Puppet::Type.newtype(:cisconexus5k_interface) do
       else
         value.to_s
       end
-    end
-  end
-
-  newproperty(:interfaceencapsulationtype) do
-    desc "Encapsulationtype for portchannel."
-    defaultto "dot1q"
-    munge do |value|
-      value.to_s
     end
   end
 end

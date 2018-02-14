@@ -17,21 +17,7 @@ Puppet::Type.type(:cisconexus5k_vlan).provide :cisconexus5k, :parent => Puppet::
   # Clear out the cached values.
   def flush
     transport.command do |dev|
-      interface = ""
-      portchannel = ""
-      interface = resource[:interface]
-      portchannel = resource[:portchannel]
-      resource_reference = resource[:ensure]
-      interfaceoperation = resource[:interfaceoperation]
-      if portchannel && resource_reference == :absent
-        dev.update_portchannel(resource[:name], former_properties, properties, resource[:portchannel], resource[:istrunkforportchannel], resource[:portchanneloperation], resource_reference)
-      end
-
-      dev.update_vlan(resource[:name], former_properties, properties, resource_reference)
-
-      if portchannel && resource_reference == :present
-        dev.update_portchannel(resource[:name], former_properties, properties, resource[:portchannel], resource[:istrunkforportchannel], resource[:portchanneloperation], resource_reference)
-      end
+      dev.update_vlan(resource[:name], former_properties, properties, resource[:ensure])
     end
     super
   end
