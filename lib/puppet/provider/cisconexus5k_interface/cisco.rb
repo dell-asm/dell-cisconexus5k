@@ -1,5 +1,5 @@
-require 'puppet/provider/cisconexus5k'
-require 'pry'
+require "puppet/provider/cisconexus5k"
+require "pry"
 
 Puppet::Type.type(:cisconexus5k_interface).provide :cisconexus5k, :parent => Puppet::Provider::Cisconexus5k do
 
@@ -12,25 +12,21 @@ Puppet::Type.type(:cisconexus5k_interface).provide :cisconexus5k, :parent => Pup
   end
 
   def self.get_current(name)
-    vlans = {}
+    interface = {}
     transport.command do |dev|
-      vlans = dev.parse_vlans || {}
+      interface = dev.parse_interfaces(name) || {}
     end
-    vlans[name]
+
+    interface[name]
   end
 
   def flush
     transport.command do |dev|
-      interface = ""
-      portchannel = ""
       interface = resource[:name]
-      resource_reference = resource[:ensure]
-      interfaceoperation = resource[:interfaceoperation]
-      if interface && resource_reference == :present
-        dev.update_interface(resource[:tagged_general_vlans], former_properties, properties, resource[:name], resource[:tagged_general_vlans].to_i, resource[:istrunkforinterface], resource[:interfaceencapsulationtype], "false", resource[:deletenativevlaninformation], resource[:unconfiguretrunkmode], resource[:shutdownswitchinterface], resource[:interfaceoperation], resource[:removeallassociatedvlans], resource_reference)
+      # native vlans can be used only on truck mode.
+      is_native = resource[:istrunkforinterface]
 
-        dev.update_interface(resource[:untagged_general_vlans], former_properties, properties, resource[:name], resource[:untagged_general_vlans].to_i, resource[:istrunkforinterface], resource[:interfaceencapsulationtype], "true", resource[:deletenativevlaninformation], resource[:unconfiguretrunkmode], resource[:shutdownswitchinterface], resource[:interfaceoperation], resource[:removeallassociatedvlans], resource_reference)
-      end
+      dev.update_interface(resource, former_properties, properties, interface, is_native)
     end
     super
   end
