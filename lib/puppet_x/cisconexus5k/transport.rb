@@ -477,6 +477,7 @@ class PuppetX::Cisconexus5k::Transport
           return
         end
         Puppet.info "The interface #{interface_id} is in trunk mode."
+        execute("no spanning-tree port type edge trunk")
         if resource[:deletenativevlaninformation] == "true"
           Puppet.info "The native VLAN information is being deleted."
           execute("no switchport trunk native vlan #{native_vlan_id}")
@@ -560,6 +561,7 @@ class PuppetX::Cisconexus5k::Transport
         Puppet.debug("Command: 'no switchport trunk native vlan #{native_vlan_id}'")
         execute("no switchport trunk native vlan #{native_vlan_id}")
       end
+      execute("spanning-tree port type edge trunk")
 
       if is[:tagged_general_vlans].nil?
         execute("switchport trunk allowed vlan #{resource[:tagged_general_vlans]}")
