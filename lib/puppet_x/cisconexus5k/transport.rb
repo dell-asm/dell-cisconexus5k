@@ -480,13 +480,13 @@ class PuppetX::Cisconexus5k::Transport
         execute("no spanning-tree port type edge trunk")
         if resource[:deletenativevlaninformation] == "true"
           Puppet.info "The native VLAN information is being deleted."
-          execute("no switchport trunk native vlan #{native_vlan_id}")
+          execute("no switchport trunk native vlan")
         end
         if resource[:removeallassociatedvlans] == "true"
           Puppet.info("The associated VLANs are being deleted.")
           execute("no switchport trunk allowed vlan")
         else
-          execute("switchport trunk allowed vlan remove #{resource[:tagged_general_vlans]}")
+          execute("no switchport trunk allowed vlan")
         end
         if resource[:unconfiguretrunkmode] == "true" || resource[:istrunkforinterface] != "true"
           Puppet.info "The trunk mode is being unconfigured."
@@ -542,7 +542,8 @@ class PuppetX::Cisconexus5k::Transport
       end
       if resource[:removeallassociatedvlans] == "true"
         Puppet.info("The associated VLANs are being deleted.")
-        execute("switchport trunk allowed vlan none")
+        execute("no switchport trunk allowed vlan")
+        execute("no switchport access vlan")
       end
 
       if resource[:deletenativevlaninformation] == "true"
@@ -559,14 +560,16 @@ class PuppetX::Cisconexus5k::Transport
       elsif is_native == "false" || is_native == :false
         Puppet.info("Need to remove the native vlan configuration.")
         Puppet.debug("Command: 'no switchport trunk native vlan #{native_vlan_id}'")
-        execute("no switchport trunk native vlan #{native_vlan_id}")
+        execute("no switchport trunk native vlan")
       end
       execute("spanning-tree port type edge trunk")
 
-      if is[:tagged_general_vlans].nil?
+      if is[:tagged_general_vlans].nil? || resource[:removeallassociatedvlans] == "true"
         execute("switchport trunk allowed vlan #{resource[:tagged_general_vlans]}")
+        execute("switchport trunk allowed vlan add #{native_vlan_id}") if native_vlan_id
       else
         execute("switchport trunk allowed vlan add #{resource[:tagged_general_vlans]}")
+        execute("switchport trunk allowed vlan add #{native_vlan_id}") if native_vlan_id
       end
 
       if should[:mtu] && should[:speed]
@@ -600,12 +603,11 @@ class PuppetX::Cisconexus5k::Transport
   end
 
   def un_configure_access_port(access_vlan)
-    execute("no switchport access vlan #{access_vlan}")
+    execute("no switchport access vlan")
     execute("no channel-group")
     execute("no switchport mode access")
     execute("no speed")
     execute("no mtu")
-    execute("shutdown")
   end
 
   def configure_access_port(should, access_vlan)
@@ -1072,14 +1074,16 @@ class PuppetX::Cisconexus5k::Transport
     if out =~ /Trunking VLANs Allowed:\s(\S+)\s/
       trunkportvlanid = $1
     end
-    if (trunkportvlanid.length == 0 || trunkportvlanid == "1-4094" || trunkportvlanid == "NONE")
+    if (trunkportvlanid.length == 0 || trunkportvlanid == "1-4094" || trunkportvlanid.downcase == "NONE".downcase)
       notaddedtoanyvlan = "true"
     end
 
     if notaddedtoanyvlan == "true"
       execute("switchport trunk allowed vlan #{taggedvlans}")
+      execute("switchport trunk allowed vlan add #{un_tagged}")
     else
       execute("switchport trunk allowed vlan add #{taggedvlans}")
+      execute("switchport trunk allowed vlan add #{un_tagged}")
     end
 
     execute("switchport trunk native vlan #{un_tagged}") if un_tagged
