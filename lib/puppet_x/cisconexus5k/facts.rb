@@ -190,11 +190,11 @@ class PuppetX::Cisconexus5k::Facts
 
     # Port channel information
     out = @transport.command('show port-channel summary')
-    port_channel_out = out.scan(/^(\d+)\s+(Po\d+).*?LACP\s+(.*?)$/m)
+    port_channel_out = out.scan(/^(\d+)\s+(Po\d+).*?Eth\s+(\w+)\s+(.*?)$/m)
     port_channels = {}
     if !port_channel_out.empty?
       port_channel_out.each do |port_channel|
-        port_channel = { :port_channel => port_channel[0].strip, :name => port_channel[1].strip ,:ports => port_channel[2].strip }
+        port_channel = { :port_channel => port_channel[0].strip, :name => port_channel[1].strip ,:protocol => port_channel[2].strip, :ports => port_channel[3].strip }
         port_channels[port_channel[:port_channel]] = port_channel
       end
     end
