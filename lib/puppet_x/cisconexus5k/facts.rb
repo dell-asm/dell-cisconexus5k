@@ -24,6 +24,9 @@ class PuppetX::Cisconexus5k::Facts
       if (line =~ /BIOS:\s+version\s+(\S+)/)
         facts["biosversion"] = $1
       end
+      if (line =~ /NXOS:\s+version\s+(\S+)/)
+        facts["nxosversion"] = $1
+      end
       if (line =~ /kickstart:\s+version\s+(\S+)/)
         facts["kickstartversion"] = $1
       end
@@ -49,6 +52,29 @@ class PuppetX::Cisconexus5k::Facts
       end
       if (line =~ /Device\s+name:\s+(\S+)/)
         facts["hostname"] = $1
+      end
+    end
+
+    # mac_address of the switch
+    out = @transport.command("show spanning-tree bridge address")
+    result = out.split("\n")[3]
+    switch_mac = result.scan(/VLAN\w+\s+(\S+)/).flatten.first
+    facts["macaddress"] = normalize_mac(switch_mac) if switch_mac
+
+    # power_state of the switch
+    begin
+      out = @transport.command("show environment power")
+      status = []
+      out.split("\n").each do |line|
+        if line =~ /^\d+(\s+\S+){7}\s+(\w+)/
+          status << $2
+        end
+      end
+
+      if status.all? {|s| s == "Ok" || s == "absent"}
+        facts["powerstate"] = "Ok"
+      else
+        facts["powerstate"] = "Critical"
       end
     end
 
