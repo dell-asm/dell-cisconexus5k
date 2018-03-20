@@ -56,10 +56,14 @@ class PuppetX::Cisconexus5k::Facts
     end
 
     # mac_address of the switch
-    out = @transport.command("show spanning-tree bridge address")
-    result = out.split("\n")[3]
-    switch_mac = result.scan(/VLAN\w+\s+(\S+)/).flatten.first
-    facts["macaddress"] = normalize_mac(switch_mac) if switch_mac
+    out = @transport.command("show interface mac-address")
+    out.split("\n").each do |line|
+      if ( line =~ /^mgmt0/ )
+        res = line.split(" ")
+        management_mac = res[1]
+        facts["macaddress"]  = normalize_mac(management_mac)
+      end
+    end
 
     # power_state of the switch
     begin

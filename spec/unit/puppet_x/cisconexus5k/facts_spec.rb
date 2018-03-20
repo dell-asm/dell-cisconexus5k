@@ -7,6 +7,7 @@ describe PuppetX::Cisconexus5k::Facts do
   let(:fact_fixtures) {File.join(PuppetSpec::FIXTURE_DIR,"unit","puppet_x","cisconexus5k")}
   let(:facts) {PuppetX::Cisconexus5k::Facts.new(nil)}
   let(:sh_vlan_ouput) { File.read(File.join(fact_fixtures,"sh_vlan.out"))}
+  let(:sh_interface_mac) {File.read(File.join(fact_fixtures,"sh_interface_mac.out"))}
   let(:sh_int_trunk_output) { File.read(File.join(fact_fixtures,"sh_int_trunk.out"))}
   let(:lldp_info) {File.read(File.join(fact_fixtures,"lldp_info.out"))}
   let(:certname) { "cisconexus5k-172.17.7.15" }
@@ -40,7 +41,6 @@ describe PuppetX::Cisconexus5k::Facts do
       require 'asm/device_management'
       ASM::DeviceManagement.stub(:parse_device_config).and_return(options[:device_config])
       transport.stub(:command).and_return("rspec rsult mocking")
-      transport.stub(:command).with("show spanning-tree bridge address").and_return("test \n spec \n test \n test")
       facts.stub(:get_vlan_information)
     end
 
@@ -64,7 +64,12 @@ describe PuppetX::Cisconexus5k::Facts do
 
     it "should get correct lldp neighbors with intercace and mac address" do
       transport.stub(:command).with("show lldp neighbors detail").and_return(lldp_info)
-     expect(JSON.parse(facts.retrieve[:remote_device_info])).to include({"interface" => "Eth1/52", "location" => "Ethernet1/52", "remote_mac" => "00:d7:8f:2a:b1:4d"})
+      expect(JSON.parse(facts.retrieve[:remote_device_info])).to include({"interface" => "Eth1/52", "location" => "Ethernet1/52", "remote_mac" => "00:d7:8f:2a:b1:4d"})
+    end
+
+    it "should get correct mac-address of the switch" do
+      transport.stub(:command).with("show interface mac-address").and_return(sh_interface_mac)
+      expect(facts.retrieve["macaddress"]).to eq("b4:de:31:f2:e3:90")
     end
   end
 end
