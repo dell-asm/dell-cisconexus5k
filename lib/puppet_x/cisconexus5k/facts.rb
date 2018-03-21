@@ -84,7 +84,10 @@ class PuppetX::Cisconexus5k::Facts
 
     out=@transport.command("show snmp community")
     item = out.scan(/(\w+)\s+\w+-\w+/).flatten
-    facts["snmp_community_string"] = item.to_json
+
+    unless item.empty?
+      facts["snmp_community_string"] = item.to_json
+    end
 
     protocols = ""
     out = @transport.command("show feature")
@@ -163,7 +166,8 @@ class PuppetX::Cisconexus5k::Facts
         res = line.split(" ")
         management_ip = res[3]
         facts[:managementip] = management_ip
-        facts[:management_ip] = management_ip
+        # using Internal management IP as a work-around for LUD-511
+        facts[:management_ip] = @transport.host
       end
     end
     out = @transport.command("show inventory")
