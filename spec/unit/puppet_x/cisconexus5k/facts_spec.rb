@@ -41,6 +41,7 @@ describe PuppetX::Cisconexus5k::Facts do
       require 'asm/device_management'
       ASM::DeviceManagement.stub(:parse_device_config).and_return(options[:device_config])
       transport.stub(:command).and_return("rspec rsult mocking")
+      transport.stub(:host).and_return("100.68.100.100")
       facts.stub(:get_vlan_information)
     end
 
