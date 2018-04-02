@@ -86,8 +86,8 @@ Puppet::Type.newtype(:cisconexus5k_portchannel) do
 
   newproperty(:speed) do
     desc "speed value"
-    defaultto(:absent)
-    newvalues(:absent, /^\d+$/)
+    defaultto(:Auto)
+    newvalues(:Auto, /^\d+$/)
   end
 
   newproperty(:access_vlan) do
