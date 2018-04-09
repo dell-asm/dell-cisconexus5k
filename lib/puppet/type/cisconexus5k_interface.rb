@@ -61,8 +61,8 @@ Puppet::Type.newtype(:cisconexus5k_interface) do
 
   newproperty(:speed) do
     desc "speed value"
-    defaultto(:absent)
-    newvalues(:absent, /^\d+$/)
+    defaultto(:Auto)
+    newvalues(:Auto, /^\d+$/)
   end
 
   newproperty(:shutdown) do
