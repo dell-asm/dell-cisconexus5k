@@ -110,6 +110,19 @@ Puppet::Type.newtype(:cisconexus5k_interface) do
     end
   end
 
+  newproperty(:enforce_portchannel) do
+    desc "flag that indicates if port-channel should be forced to be configured"
+    newvalues("true", "false")
+    defaultto "false"
+    munge do |value|
+      if value.strip.length == 0
+        value.to_s
+      else
+        value.to_s
+      end
+    end
+  end
+
   newproperty(:access_vlan) do
     desc "vlan for access port when interface is not in trunk mode"
     validate do |value|

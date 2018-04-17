@@ -513,17 +513,30 @@ class PuppetX::Cisconexus5k::Transport
     end
   end
 
+  # Creates interface-port in the switch
+  #
+  # Supports configuring both trunk and access port modes
+  #
+  # @param resource [Hash] interface resource
+  # @param is [Hash] already existing configuration in reference to current resource
+  # @param should [Hash] resource with configuration to be applied on switch
+  # @param interface_id [String] interface id
+  # @param is_native [String] Boolean represented in String
+  # @param native_vlan_id [String] untagged_vlan id
+  # @return [void]
   def configure_interface_port(resource, is = {}, should = {}, interface_id = {}, is_native = {}, native_vlan_id)
     # We're creating or updating an entry
     execute("conf t")
     execute("interface #{interface_id}")
+
+    if is[:port_channel]
+      Puppet.debug("Interface %s is already configured with %s. Only adds vlans in port_channel" % [interface_id, is[:port_channel]])
+      return if resource[:port_channel]
+    end
+
     if resource[:istrunkforinterface] == "true"
       Puppet.debug("Verify whether or not the specified interface is already configured as a trunk interface.")
       responsetrunk = execute("show interface #{interface_id} trunk")
-
-      unless is[:port_channel].nil?
-        execute("no channel-group")
-      end
 
       if responsetrunk =~ /Invalid/
         Puppet.info("The trunking feature is not already configured for  the interface #{interface_id}. Configure trunking feature on this interface.")
@@ -538,8 +551,14 @@ class PuppetX::Cisconexus5k::Transport
         if updateencapsulationtype != ""
           execute("switchport trunk encapsulation #{updateencapsulationtype}")
         end
-        execute("switchport mode trunk")
+        if resource[:removeallassociatedvlans] == "true"
+          execute("switchport mode trunk")
+        else
+          # at this stage port is in access port-mode and server is already configured should not update port-mode
+          raise("Interface mode has been modified after initial switch configuration proceeding will disrupt the network")
+        end
       end
+
       if resource[:removeallassociatedvlans] == "true"
         Puppet.info("The associated VLANs are being deleted.")
         execute("no switchport trunk allowed vlan")
@@ -576,8 +595,20 @@ class PuppetX::Cisconexus5k::Transport
         execute("speed #{should[:speed]}")
         execute("mtu #{should[:mtu]}")
       end
-      add_port_channel_interface(should, resource[:is_lacp], resource[:port_channel])
+      if resource[:enforce_portchannel] == "true"
+        add_port_channel_interface(should, resource[:is_lacp], resource[:port_channel])
+      else
+        Puppet.info("Skipping port-channel configuring for interace #{interface_id} to interface as enforce_portchannel property is false")
+      end
     else
+      # check if interface port is in trunk mode
+      out = execute("show interface #{interface_id} switchport")
+      if out =~ /Operational Mode:\s+(\S+)/
+        if $1 == "trunk" && resource[:removeallassociatedvlans] == "false"
+          raise("interface-port is in trunk mode cannot be changed at this stage")
+        end
+      end
+
       Puppet.info "removing existing vlans if present from interface port #{interface_id}"
       if resource[:istrunkforinterface] == "false"
         Puppet.info "The trunk mode is being unconfigured."
@@ -595,7 +626,7 @@ class PuppetX::Cisconexus5k::Transport
       end
       Puppet.info "The interface #{interface_id} is being configured into access mode."
       configure_access_port(should, resource[:access_vlan])
-      add_port_channel_interface(should, resource[:is_lacp], resource[:port_channel])
+      add_port_channel_interface(should, resource[:is_lacp], resource[:port_channel]) if resource[:enforce_portchannel] == "true"
     end
     execute("exit")
     execute("exit")
@@ -984,7 +1015,10 @@ class PuppetX::Cisconexus5k::Transport
     responsepchannel = execute("show interface #{pchannel}")
     if responsepchannel =~ /Invalid/
       Puppet.debug "A port channel #{portchannel} does not exist."
-      return if ensureabsent == :absent
+      if ensureabsent == :absent || (should[:enforce_portchannel] == "false" && should[:removeallassociatedvlans] == "false")
+        Puppet.info "port_channel is not configured and no need to configure at this stage"
+        return
+      end
     end
     if should[:ensure] == :absent || portchanneloperation == "remove" || ensureabsent == :absent
       Puppet.info "A port channel #{portchannel} is being deleted from the device VLAN"
@@ -1001,6 +1035,19 @@ class PuppetX::Cisconexus5k::Transport
     if is_trunk_portchannel  == "true"
       Puppet.info "A port channel #{portchannel} is being configured into trunk mode."
 
+      # check if port-channel is in trunk mode
+      out = execute("show interface #{pchannel} switchport")
+
+      if out =~ /Operational Mode:\s+(\S+)/
+        if $1 != "trunk" && should[:removeallassociatedvlans] == "false"
+
+          # By default port_channel will be in access mode. should not raise error after pre_server config
+          if should[:enforce_portchannel] == "false" && should[:removeallassociatedvlans] == "false"
+          raise("port-channel is in access mode cannot change at this stage")
+          end
+        end
+      end
+
       if should[:removeallassociatedvlans] == "true"
         Puppet.info("The associated VLANs are being deleted.")
         execute("switchport trunk allowed vlan none")
@@ -1013,7 +1060,8 @@ class PuppetX::Cisconexus5k::Transport
 
       # for now portchannel defaults to dot1q
       portchannelencapsulationtype = "dot1q"
-      addmembertotrunkvlan(tagged_vlan, untagged_vlan, portchannel, portchannelencapsulationtype)
+
+      addmembertotrunkvlan(tagged_vlan, untagged_vlan, portchannel, portchannelencapsulationtype, should[:removeallassociatedvlans])
 
       if should[:vpc]
         execute(" no vpc") if !is[:vpc].nil?
@@ -1028,8 +1076,25 @@ class PuppetX::Cisconexus5k::Transport
       end
     else
       Puppet.info "A port channel #{portchannel} is being configured into access mode."
+      # check if port-channel is in trunk mode
+      out = execute("show interface #{pchannel} switchport")
+
+      if out =~ /Operational Mode:\s+(\S+)/
+        if $1 == "trunk" && should[:removeallassociatedvlans] == "false"
+          raise("port-channel is in trunk mode cannot change at this stage")
+        end
+      end
+
       execute("switchport mode access")
-      execute("switcport access vlan #{access_vlan}")
+
+      if out =~ /Access Mode VLAN:\s(\S+)/
+        existing_access_vlan = $1
+      end
+
+      if existing_access_vlan == "1" || should[:removeallassociatedvlans] == "true"
+        execute("switcport access vlan #{access_vlan}")
+      end
+
       if should[:vpc]
         execute(" no vpc") if !is[:vpc].nil?
         if is[:vpc] != should[:vpc]
@@ -1048,7 +1113,7 @@ class PuppetX::Cisconexus5k::Transport
     nil
   end
 
-  def addmembertotrunkvlan(taggedvlans, un_tagged, portchannelid, portchannelencapsulationtype)
+  def addmembertotrunkvlan(taggedvlans, un_tagged, portchannelid, portchannelencapsulationtype, overide_native_vlan)
     portchannel = "po#{portchannelid}"
     Puppet.info("The encapsulationtype for portchannel #{portchannelid} is being retrieved.")
     updateencapsulationtype = getencapsulationtype(portchannel, portchannelencapsulationtype)
@@ -1068,27 +1133,46 @@ class PuppetX::Cisconexus5k::Transport
       execute("switchport mode trunk")
     end
 
-    notaddedtoanyvlan = "false"
+    vlans_present = "false"
     out = execute("show interface #{portchannel} switchport")
 
     if out =~ /Trunking VLANs Allowed:\s(\S+)\s/
       trunkportvlanid = $1
     end
+
+    if out =~ /Trunking Native Mode VLAN:\s(\S+)/
+      existing_native_vlan = $1
+    end
+
     if (trunkportvlanid.length == 0 || trunkportvlanid == "1-4094" || trunkportvlanid.downcase == "NONE".downcase)
-      notaddedtoanyvlan = "true"
-    end
-
-    if notaddedtoanyvlan == "true"
       execute("switchport trunk allowed vlan #{taggedvlans}")
-      execute("switchport trunk allowed vlan add #{un_tagged}")
     else
-      execute("switchport trunk allowed vlan add #{taggedvlans}")
-      execute("switchport trunk allowed vlan add #{un_tagged}")
+      port_channel_vlans = generate_all_vlans_form_range(trunkportvlanid)
+      taggedvlans.split(",").each do |vlan|
+        execute("switchport trunk allowed vlan add #{vlan}") unless port_channel_vlans.include?(vlan)
+      end
     end
 
-    execute("switchport trunk native vlan #{un_tagged}") if un_tagged
+    if existing_native_vlan == "1" || overide_native_vlan == "true"
+      execute("switchport trunk allowed vlan add #{un_tagged}")
+      execute("switchport trunk native vlan #{un_tagged}")
+    end
 
     return
+  end
+
+  def generate_all_vlans_form_range(vlans)
+    existing_vlans = []
+    vlans.split(",").each do |value|
+      if value.include?("-")
+        range_numbers = value.split("-")
+        existing_vlans.push([*range_numbers[0]..range_numbers[1]])
+      else
+        existing_vlans.push(value)
+      end
+    end
+
+    existing_vlans.flatten
   end
 
   def update_zone(id, is = {}, should = {}, vsanid = {}, membertype = {}, member = {}, tempensure = {})
