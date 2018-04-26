@@ -149,6 +149,21 @@ describe PuppetX::Cisconexus5k::Transport do
       transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
     end
 
+    it "should remove already existing port-channel when removeallassociatedvlans is true" do
+      resource = {:name => "Eth1/5" , :untagged_general_vlans => "20", :tagged_general_vlans => "17", :ensure => :present,
+                  :istrunkforinterface => "true", :mtu => "9216", :speed => "10000", :removeallassociatedvlans => "true"
+      }
+
+      is_resource = {:switchport_mode => "trunk",:port_channel => 200, :untagged_general_vlans => nil, :tagged_general_vlans => "17,99", :access_vlan => nil}
+
+      expect(transport).to receive(:gettrunkinterfacestatus).and_return("access")
+      expect(transport).to receive(:getencapsulationtype).and_return("")
+      expect(transport).to receive(:execute).with("no channel-group")
+      expect(transport).to receive(:execute).at_least(3).times
+
+      transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
+    end
+
     it "should not configure port-channel if there no port-channel and enforce_portchannel is false" do
       resource = {:name => "Eth1/5", :enforce_portchannel => "false", :port_channel => "200", :untagged_general_vlans => "20", :tagged_general_vlans => "17", :ensure => :present,
                   :istrunkforinterface => "true", :mtu => "9216", :speed => "10000", :removeallassociatedvlans => "true"}
