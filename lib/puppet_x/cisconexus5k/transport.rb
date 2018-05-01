@@ -469,6 +469,7 @@ class PuppetX::Cisconexus5k::Transport
       if is[:port_channel]
         Puppet.debug("Removing port-channel %s from %s" % [is[:port_channel], interface_id])
           execute("no channel-group")
+          execute("no interface port-channel #{is[:port_channel]}")
       end
 
       if resource[:istrunkforinterface] == "true"
