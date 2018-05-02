@@ -566,7 +566,8 @@ class PuppetX::Cisconexus5k::Transport
           execute("switchport mode trunk")
         else
           # at this stage port is in access port-mode and server is already configured should not update port-mode
-          raise("Interface mode has been modified after initial switch configuration proceeding will disrupt the network")
+          Puppet.warning("Interface mode has been modified after initial switch configuration proceeding will disrupt the network skipping further config")
+          return
         end
       end
 
@@ -616,7 +617,8 @@ class PuppetX::Cisconexus5k::Transport
       out = execute("show interface #{interface_id} switchport")
       if out =~ /Operational Mode:\s+(\S+)/
         if $1 == "trunk" && resource[:removeallassociatedvlans] == "false"
-          raise("interface-port is in trunk mode cannot be changed at this stage")
+          Puppet.warning("Interface-port is in trunk mode cannot be changed at this stage skipping further switch config")
+          return
         end
       end
 
@@ -1054,7 +1056,8 @@ class PuppetX::Cisconexus5k::Transport
 
           # By default port_channel will be in access mode. should not raise error after pre_server config
           if should[:enforce_portchannel] == "false" && should[:removeallassociatedvlans] == "false"
-          raise("port-channel is in access mode cannot change at this stage")
+          Puppet.warning("port-channel is in access mode cannot change at this stage skipping further config")
+            return
           end
         end
       end
@@ -1092,7 +1095,8 @@ class PuppetX::Cisconexus5k::Transport
 
       if out =~ /Operational Mode:\s+(\S+)/
         if $1 == "trunk" && should[:removeallassociatedvlans] == "false"
-          raise("port-channel is in trunk mode cannot change at this stage")
+          Puppet. warning("port-channel is in trunk mode cannot change at this stage skipping further config")
+          return
         end
       end
 
