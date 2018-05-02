@@ -82,10 +82,9 @@ describe PuppetX::Cisconexus5k::Transport do
       expect(transport).to receive(:execute).with("interface port-channel 200")
       expect(transport).to receive(:execute).with("switchport")
       expect(transport).to receive(:execute).with("show interface po200 switchport").and_return("Operational Mode: access")
+      expect(Puppet).to receive(:warning).with("port-channel is in access mode cannot change at this stage skipping further config")
 
-      expect do
-        transport.update_port_channel(25, 20, nil, is, config, "200", "true", {}, :present)
-      end.to raise_error("port-channel is in access mode cannot change at this stage")
+      transport.update_port_channel(25, 20, nil, is, config, "200", "true", {}, :present)
     end
 
     it "should raise error if port-channel is in trunk mode and resource config is set to access mode after initial switch config" do
@@ -96,10 +95,9 @@ describe PuppetX::Cisconexus5k::Transport do
       expect(transport).to receive(:execute).with("interface port-channel 200")
       expect(transport).to receive(:execute).with("switchport")
       expect(transport).to receive(:execute).with("show interface po200 switchport").and_return("Operational Mode: trunk")
+      expect(Puppet).to receive(:warning).with("port-channel is in trunk mode cannot change at this stage skipping further config")
 
-      expect do
-        transport.update_port_channel(nil, nil, 20, is, config, "200", "false", {}, :present)
-      end.to raise_error("port-channel is in trunk mode cannot change at this stage")
+      transport.update_port_channel(nil, nil, 20, is, config, "200", "false", {}, :present)
     end
   end
 
@@ -188,9 +186,9 @@ describe PuppetX::Cisconexus5k::Transport do
       expect(transport).to receive(:getencapsulationtype).and_return("")
       expect(transport).not_to receive(:execute).with("switchport mode trunk")
       expect(transport).to receive(:execute).at_least(3).times
-      expect do
-        transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
-      end.to raise_error("Interface mode has been modified after initial switch configuration proceeding will disrupt the network")
+      expect(Puppet).to receive(:warning).with("Interface mode has been modified after initial switch configuration proceeding will disrupt the network skipping further config")
+
+      transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
     end
 
     it "should raise error if interface is in trunk mode, resource config is set to access mode and removeallassociatedvlans is set to false" do
@@ -201,10 +199,9 @@ describe PuppetX::Cisconexus5k::Transport do
       expect(transport).to receive(:execute).with("conf t")
       expect(transport).to receive(:execute).with("interface Eth1/5")
       expect(transport).to receive(:execute).with("show interface Eth1/5 switchport").and_return("Operational Mode: trunk")
+      expect(Puppet).to receive(:warning).with("Interface-port is in trunk mode cannot be changed at this stage skipping further switch config")
 
-      expect do
-        transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
-      end.to raise_error("interface-port is in trunk mode cannot be changed at this stage")
+      transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
     end
   end
 
