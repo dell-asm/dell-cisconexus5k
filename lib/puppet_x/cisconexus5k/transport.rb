@@ -468,8 +468,7 @@ class PuppetX::Cisconexus5k::Transport
 
       if is[:port_channel]
         Puppet.debug("Removing port-channel %s from %s" % [is[:port_channel], interface_id])
-          execute("no channel-group")
-          execute("no interface port-channel #{is[:port_channel]}")
+        execute("no channel-group")
       end
 
       if resource[:istrunkforinterface] == "true"
@@ -514,6 +513,11 @@ class PuppetX::Cisconexus5k::Transport
         un_configure_access_port(resource[:access_vlan])
       end
       execute("exit")
+      # Deleting port-channel after un-assigning from interface port
+      if is[:port_channel]
+        Puppet.debug("Deleting port-channel from switch")
+        execute("no interface port-channel #{is[:port_channel]}")
+      end
       execute("exit")
     else
       configure_interface_port(resource, is, should, interface_id, is_native, native_vlan_id)
@@ -1076,7 +1080,7 @@ class PuppetX::Cisconexus5k::Transport
       portchannelencapsulationtype = "dot1q"
 
       addmembertotrunkvlan(tagged_vlan, untagged_vlan, portchannel, portchannelencapsulationtype, should[:removeallassociatedvlans])
-
+      
       if should[:vpc]
         execute(" no vpc") if !is[:vpc].nil?
         if is[:vpc] != should[:vpc]
