@@ -587,7 +587,11 @@ class PuppetX::Cisconexus5k::Transport
       end
 
       if is_native == "true" || is_native == :true
-        if native_vlan_id
+        if native_vlan_id != is[:untagged_general_vlans] && resource[:removeallassociatedvlans] == "false"
+          Puppet.debug("Initial Native vlan has been changed.")
+        end
+
+        if resource[:removeallassociatedvlans] == "true"
           Puppet.info("A switch interface with a native VLAN is being configured.")
           Puppet.debug("Command: 'switchport trunk native vlan #{native_vlan_id}'")
           execute("switchport trunk native vlan #{native_vlan_id}")
@@ -642,7 +646,7 @@ class PuppetX::Cisconexus5k::Transport
         execute("no switchport trunk native vlan")
       end
       Puppet.info "The interface #{interface_id} is being configured into access mode."
-      configure_access_port(should, resource[:access_vlan])
+      configure_access_port(should, is)
       add_port_channel_interface(should, resource[:is_lacp], resource[:port_channel]) if resource[:enforce_portchannel] == "true"
     end
     execute("exit")
@@ -658,10 +662,13 @@ class PuppetX::Cisconexus5k::Transport
     execute("no mtu")
   end
 
-  def configure_access_port(should, access_vlan)
+  def configure_access_port(should, existing_config)
     execute("switchport")
     execute("switchport mode access")
-    execute("switchport access vlan #{access_vlan}")
+    unless existing_config[:access_vlan] == should[:access_vlan]
+      execute("switchport access vlan #{should[:access_vlan]}")  if should[:deletenativevlaninformation] == "true"
+    end
+
     if should[:mtu] && should[:speed]
       execute("speed #{should[:speed]}")
       execute("mtu #{should[:mtu]}")
@@ -1076,11 +1083,12 @@ class PuppetX::Cisconexus5k::Transport
         execute("no switchport trunk native vlan")
       end
 
+      execute("spanning-tree port type edge trunk")
       # for now portchannel defaults to dot1q
       portchannelencapsulationtype = "dot1q"
 
       addmembertotrunkvlan(tagged_vlan, untagged_vlan, portchannel, portchannelencapsulationtype, should[:removeallassociatedvlans])
-      
+
       if should[:vpc]
         execute(" no vpc") if !is[:vpc].nil?
         if is[:vpc] != should[:vpc]
@@ -1175,6 +1183,10 @@ class PuppetX::Cisconexus5k::Transport
     if existing_native_vlan == "1" || overide_native_vlan == "true"
       execute("switchport trunk allowed vlan add #{un_tagged}")
       execute("switchport trunk native vlan #{un_tagged}")
+    end
+
+    if existing_native_vlan == un_tagged
+      execute("switchport trunk allowed vlan add #{un_tagged}")
     end
 
     return
