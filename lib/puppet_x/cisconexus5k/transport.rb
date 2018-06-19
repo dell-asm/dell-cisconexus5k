@@ -1073,12 +1073,12 @@ class PuppetX::Cisconexus5k::Transport
         end
       end
 
-      if should[:removeallassociatedvlans] == "true"
+      if should[:removeallassociatedvlans] == "true" || should[:enforce_portchannel] == "true"
         Puppet.info("The associated VLANs are being deleted.")
         execute("switchport trunk allowed vlan none")
       end
 
-      if should[:deletenativevlaninformation] == "true"
+      if should[:deletenativevlaninformation] == "true" || should[:enforce_portchannel] == "true"
         Puppet.info("The native VLAN is being deleted.")
         execute("no switchport trunk native vlan")
       end
