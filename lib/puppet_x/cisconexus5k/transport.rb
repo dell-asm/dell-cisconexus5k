@@ -639,6 +639,9 @@ class PuppetX::Cisconexus5k::Transport
       if resource[:removeallassociatedvlans] == "true"
         Puppet.info("The trunk VLANs are being deleted.")
         execute("no switchport trunk allowed vlan")
+
+        Puppet.info("spanning tree config is being removed")
+        execute("no spanning-tree port type")
       end
 
       if resource[:deletenativevlaninformation] == "true"
