@@ -31,6 +31,16 @@ Puppet::Type.newtype(:cisconexus5k_portchannel) do
     end
   end
 
+  newproperty(:interface_port) do
+    desc "Name of the interface. Valid value start with Eth or Ethernet followed by module/port."
+
+    validate do |value|
+      unless value=~/Eth\s*\S+$/ or value=~/Ethernet\s*\S+$/
+        raise ArgumentError, "%s is not a valid interface name. Valid interface name shouyld start with 'Eth' or 'Ethernet'followed by module/port" %value
+      end
+    end
+  end
+
   newproperty(:untagged_vlan) do
     desc "Untagged VLANs to add to a general port. Specify non consecutive VLAN IDs with a comma and no spaces. Use a hyphen to designate a range of VLAN IDs."
     validate do |value|

@@ -204,7 +204,7 @@ class PuppetX::Cisconexus5k::Transport
   end
 
   def parse_interfaces(interface)
-    interface_config = {:switchport_mode => nil, :port_channel => nil, :untagged_general_vlans => nil, :tagged_general_vlans => nil, :access_vlan => nil}
+    interface_config = {:switchport_mode => nil, :port_channel => nil, :untagged_general_vlans => nil, :tagged_general_vlans => nil, :access_vlan => nil, :speed => nil}
     interface_result = execute("show running-config interface ethernet #{interface.match(/Eth(\S+)/)[1]}")
 
     interface_result.split("\n").each {|line|
@@ -222,6 +222,8 @@ class PuppetX::Cisconexus5k::Transport
       interface_config[:untagged_general_vlans] = $1 if line.match(/switchport trunk native vlan (\d+)/)
 
       interface_config[:tagged_general_vlans] = $1 if line.match(/switchport trunk allowed vlan\s(\S+)/)
+
+      interface_config[:speed] = $1 if line.match(/speed\s(\d+)/)
     }
 
     {interface => interface_config}
@@ -502,7 +504,6 @@ class PuppetX::Cisconexus5k::Transport
         execute("no channel-group")
         Puppet.info "removing spanning tree."
         execute("no spanning-tree port type")
-        execute("no speed")
         execute("no mtu")
         if resource[:shutdownswitchinterface] == "true" && resource[:unconfiguretrunkmode] == "false"
           Puppet.info "The interface #{interface_id} is being shut down."
@@ -611,10 +612,16 @@ class PuppetX::Cisconexus5k::Transport
         execute("switchport trunk allowed vlan add #{native_vlan_id}") if native_vlan_id
       end
 
-      if should[:mtu] && should[:speed]
-        execute("speed #{should[:speed]}")
+      if should[:mtu]
         execute("mtu #{should[:mtu]}")
       end
+
+      if is[:speed]
+        execute("speed #{is[:speed]}")
+      else
+        execute("speed #{should[:speed]}")
+      end
+
       if resource[:enforce_portchannel] == "true"
         add_port_channel_interface(should, resource[:is_lacp], resource[:port_channel])
       else
@@ -661,7 +668,6 @@ class PuppetX::Cisconexus5k::Transport
     execute("no switchport access vlan")
     execute("no channel-group")
     execute("no switchport mode access")
-    execute("no speed")
     execute("no mtu")
   end
 
@@ -672,9 +678,14 @@ class PuppetX::Cisconexus5k::Transport
       execute("switchport access vlan #{should[:access_vlan]}")  if should[:deletenativevlaninformation] == "true"
     end
 
-    if should[:mtu] && should[:speed]
-      execute("speed #{should[:speed]}")
+    if should[:mtu]
       execute("mtu #{should[:mtu]}")
+    end
+
+    if existing_config[:speed]
+      execute("speed #{existing_config[:speed]}")
+    else
+      execute("speed #{should[:speed]}")
     end
   end
 
@@ -1099,9 +1110,15 @@ class PuppetX::Cisconexus5k::Transport
         end
       end
 
-      if should[:mtu] && should[:speed]
-        execute("speed #{should[:speed]}")
+      if should[:mtu]
         execute("mtu #{should[:mtu]}")
+      end
+
+      if should[:speed]
+        expected_interface_port_info = parse_interfaces(should[:interface_port])
+        existing_port_speed = expected_interface_port_info[:speed]
+
+        existing_port_speed ? execute("speed #{existing_port_speed}") : execute("speed #{should[:speed]}")
       end
     else
       Puppet.info "A port channel #{portchannel} is being configured into access mode."
