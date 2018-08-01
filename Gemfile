@@ -1,11 +1,11 @@
 source 'https://rubygems.org'
 
 group :development, :test do
-  gem 'rake'
+  gem 'rake', '<11.0'
   gem 'rspec', '~>3.4.0', :require => false
   gem 'puppetlabs_spec_helper', '0.4.1', :require => false
   gem 'json_pure', '2.0.1'
-  gem 'nokogiri', '1.6.8'
+  gem 'nokogiri', '~> 1.8.1'
   gem 'hashie'
   gem 'i18n', '0.6.9'
   gem 'dell-asm-util', :git => 'https://github.com/dell-asm/dell-asm-util.git', :branch => 'master'
@@ -15,6 +15,6 @@ group :development, :test do
   if puppetversion = ENV['PUPPET_GEM_VERSION']
     gem 'puppet', puppetversion
   else
-    gem 'puppet', '3.4.2'
+    gem 'puppet', '5.3.3'
   end
 end
