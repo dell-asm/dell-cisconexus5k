@@ -503,7 +503,7 @@ class PuppetX::Cisconexus5k::Transport
         Puppet.info "removing port channel."
         execute("no channel-group")
         Puppet.info "removing spanning tree."
-        execute("no spanning-tree port type")
+        execute("no spanning-tree port type edge trunk")
         execute("no mtu")
         if resource[:shutdownswitchinterface] == "true" && resource[:unconfiguretrunkmode] == "false"
           Puppet.info "The interface #{interface_id} is being shut down."
@@ -648,7 +648,7 @@ class PuppetX::Cisconexus5k::Transport
         execute("no switchport trunk allowed vlan")
 
         Puppet.info("spanning tree config is being removed")
-        execute("no spanning-tree port type")
+        execute("no spanning-tree port type edge trunk")
       end
 
       if resource[:deletenativevlaninformation] == "true"
