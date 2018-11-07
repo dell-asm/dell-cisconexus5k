@@ -34,6 +34,7 @@ describe PuppetX::Cisconexus5k::Transport do
               :untagged_vlan => "1", :tagged_vlan => "99,17",
               :mtu => "9216",:interface_port =>"Eth1/5", :speed => "10000", :istrunkforportchannel => "true", :removeallassociatedvlans => "true"}
     is = {:name => "200", :protocol => "NONE", :interfaces => "Eth1/5(D)    ", :speed => nil}
+    interface_config = {"Eth1/5" => {:name => "200", :protocol => "NONE", :interfaces => "Eth1/5(D)    ", :speed => nil}}
 
     before(:each) do
       expect(transport).to receive(:execute).with("conf t")
@@ -46,7 +47,7 @@ describe PuppetX::Cisconexus5k::Transport do
       expect(transport).to receive(:execute).with("speed 10000")
       expect(transport).to receive(:execute).with("mtu 9216")
       expect(transport).to receive(:execute).with("no shutdown")
-      expect(transport).to receive(:parse_interfaces).and_return(is)
+      expect(transport).to receive(:parse_interfaces).and_return(interface_config)
       expect(transport).not_to receive(:execute).with("switchport mode access")
 
       transport.update_port_channel("17,19", "20", {}, is, should, "200", "true", {}, "present")

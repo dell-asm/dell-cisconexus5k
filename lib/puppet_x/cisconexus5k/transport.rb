@@ -1116,7 +1116,7 @@ class PuppetX::Cisconexus5k::Transport
 
       if should[:speed]
         expected_interface_port_info = parse_interfaces(should[:interface_port])
-        existing_port_speed = expected_interface_port_info[:speed]
+        existing_port_speed = expected_interface_port_info[should[:interface_port]][:speed]
 
         existing_port_speed ? execute("speed #{existing_port_speed}") : execute("speed #{should[:speed]}")
       end
