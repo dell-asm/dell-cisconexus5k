@@ -116,11 +116,8 @@ Puppet::Type.type(:cisconexus5k_firmwareupdate).provide :cisconexus5k, :parent =
     copysuccess=false
     send_command("copy #{url} bootflash: vrf management", :prompt => /Copy complete|File not found/)
     existreaddir=''
-    command = "dir bootflash:"
-    sleep 10
-    Puppet.debug(command)
-    send_command(command , :prompt => /nxos/) do |outp|
-      existreaddir << outp
+    send_command("dir bootflash:", :prompt => /#{filename}/) do |out|
+      existreaddir<<out
     end
       filefound = existreaddir.scan(filename)
       Puppet.debug("******  File found ******")
