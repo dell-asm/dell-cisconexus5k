@@ -45,7 +45,6 @@ class PuppetX::Cisconexus5k::Transportnexus
       @session.password = device_conf[:password]
       @enable_password = device_conf[:password]
     end
-    Puppet.debug("Session information #{@session.inspect}")
     @session.default_prompt = /\r.*[#>]\s?\z/n
     connect
   end
