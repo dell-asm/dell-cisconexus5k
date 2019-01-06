@@ -3,6 +3,8 @@ sudo: false
 script: "bundle exec rake"
 rvm:
   - 1.9.3
+before_install:
+  - gem install bundler -v '< 2'
 env:
   - PUPPET_GEM_VERSION='3.6.2'
 matrix:
