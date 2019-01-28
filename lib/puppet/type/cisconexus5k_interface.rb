@@ -185,4 +185,11 @@ Puppet::Type.newtype(:cisconexus5k_interface) do
       end
     end
   end
+
+  newproperty(:save_start_up_config) do
+    desc "saves running-config to startup config"
+    validate do |value|
+      return unless value
+    end
+  end
 end
