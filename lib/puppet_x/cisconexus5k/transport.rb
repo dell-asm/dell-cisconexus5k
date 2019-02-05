@@ -491,7 +491,6 @@ class PuppetX::Cisconexus5k::Transport
           return
         end
         Puppet.info "The interface #{interface_id} is in trunk mode."
-        execute("no spanning-tree port type edge trunk")
         if resource[:deletenativevlaninformation] == "true"
           Puppet.info "The native VLAN information is being deleted."
           execute("no switchport trunk native vlan")
@@ -510,6 +509,7 @@ class PuppetX::Cisconexus5k::Transport
         execute("no channel-group")
         Puppet.info "removing spanning tree."
         execute("no spanning-tree port type edge trunk")
+        execute("no spanning-tree guard loop")
         execute("no mtu")
         if resource[:shutdownswitchinterface] == "true" && resource[:unconfiguretrunkmode] == "false"
           Puppet.info "The interface #{interface_id} is being shut down."
@@ -571,6 +571,7 @@ class PuppetX::Cisconexus5k::Transport
       Puppet.info("The trunk interface status for #{interface_id} is being retrieved.")
       interfacestatus = gettrunkinterfacestatus(responsetrunk)
       Puppet.info("The encapsulationtype for the interface #{interface_id} is being retrieved.")
+
       updateencapsulationtype = getencapsulationtype(interface_id, resource[:interfaceencapsulationtype])
       if interfacestatus != "trunking"
         execute("switchport")
@@ -578,6 +579,9 @@ class PuppetX::Cisconexus5k::Transport
           execute("switchport trunk encapsulation #{updateencapsulationtype}")
         end
         if resource[:removeallassociatedvlans] == "true"
+          Puppet.debug("changing interface to trunk from access port")
+          execute("no spanning-tree port type edge")
+          execute("no spanning-tree guard loop")
           execute("switchport mode trunk")
         else
           # at this stage port is in access port-mode and server is already configured should not update port-mode
@@ -616,6 +620,7 @@ class PuppetX::Cisconexus5k::Transport
         execute("no switchport trunk native vlan")
       end
       execute("spanning-tree port type edge trunk")
+      execute("spanning-tree guard loop")
 
       if is[:tagged_general_vlans].nil? || resource[:removeallassociatedvlans] == "true"
         execute("switchport trunk allowed vlan #{resource[:tagged_general_vlans]}")
@@ -662,6 +667,7 @@ class PuppetX::Cisconexus5k::Transport
 
         Puppet.info("spanning tree config is being removed")
         execute("no spanning-tree port type edge trunk")
+        execute("no spanning-tree guard loop")
       end
 
       if resource[:deletenativevlaninformation] == "true"
@@ -679,6 +685,8 @@ class PuppetX::Cisconexus5k::Transport
 
   def un_configure_access_port(access_vlan)
     execute("no switchport access vlan")
+    execute("no spanning-tree port type edge")
+    execute("no spanning-tree guard loop")
     execute("no channel-group")
     execute("no switchport mode access")
     execute("no mtu")
@@ -692,6 +700,8 @@ class PuppetX::Cisconexus5k::Transport
         should[:access_vlan] == "NONE" ? execute("no switchport access vlan") : execute("switchport access vlan #{should[:access_vlan]}")
       end
     end
+    execute("spanning-tree port type edge")
+    execute("spanning-tree guard loop")
 
     if should[:mtu]
       execute("mtu #{should[:mtu]}")
@@ -1025,7 +1035,7 @@ class PuppetX::Cisconexus5k::Transport
   def getencapsulationtype(interfaceid, encapsulationtype)
     updateencapsulationtype = ""
     encapsulationtypelist = ""
-    if encapsulationtype != ""
+    if encapsulationtype != "" || encapsulationtype != nil
       responsecapability = execute("show interface #{interfaceid} Capabilities")
       if responsecapability =~ /Trunk encap. type:\s+(\S+)/
         encapsulationtypelist = $1
@@ -1099,6 +1109,11 @@ class PuppetX::Cisconexus5k::Transport
           Puppet.warning("port-channel is in access mode cannot change at this stage skipping further config")
             return
           end
+        elsif should[:removeallassociatedvlans] == "true"
+          Puppet.debug("Changing access type port-channel to trunk")
+          execute("no spanning-tree port type edge")
+          execute("no switchport mode access")
+          execute("no spanning-tree guard loop")
         end
       end
 
@@ -1113,6 +1128,8 @@ class PuppetX::Cisconexus5k::Transport
       end
 
       execute("spanning-tree port type edge trunk")
+      execute("spanning-tree guard loop")
+
       # for now portchannel defaults to dot1q
       portchannelencapsulationtype = "dot1q"
 
@@ -1142,8 +1159,13 @@ class PuppetX::Cisconexus5k::Transport
 
       if out =~ /Operational Mode:\s+(\S+)/
         if $1 == "trunk" && should[:removeallassociatedvlans] == "false"
-          Puppet. warning("port-channel is in trunk mode cannot change at this stage skipping further config")
+          Puppet.warning("port-channel is in trunk mode cannot change at this stage skipping further config")
           return
+        elsif should[:removeallassociatedvlans] == "true"
+          Puppet.debug("Changing trunk type port-channel to access")
+          execute("no spanning-tree port type edge trunk")
+          execute("no switchport mode trunk")
+          execute("no spanning-tree guard loop")
         end
       end
 
@@ -1156,6 +1178,9 @@ class PuppetX::Cisconexus5k::Transport
       if existing_access_vlan == "1" || should[:removeallassociatedvlans] == "true"
         execute("switcport access vlan #{access_vlan}")
       end
+
+      execute("spanning-tree port type edge")
+      execute("no spanning-tree guard loop")
 
       if should[:vpc]
         execute(" no vpc") if !is[:vpc].nil?
