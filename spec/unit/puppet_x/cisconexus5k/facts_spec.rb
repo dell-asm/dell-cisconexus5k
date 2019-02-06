@@ -10,6 +10,8 @@ describe PuppetX::Cisconexus5k::Facts do
   let(:sh_interface_mac) {File.read(File.join(fact_fixtures,"sh_interface_mac.out"))}
   let(:sh_int_trunk_output) { File.read(File.join(fact_fixtures,"sh_int_trunk.out"))}
   let(:lldp_info) {File.read(File.join(fact_fixtures,"lldp_info.out"))}
+  let(:interface_capabilities) {File.read(File.join(fact_fixtures, "capabilities.out"))}
+  let(:interface_mac_info) {File.read(File.join(fact_fixtures, "mac_address.out"))}
   let(:certname) { "cisconexus5k-172.17.7.15" }
   let(:options) { {:device_config=>{:scheme=>"ssh", :host=>"172.17.11.13", :port=>22, :password=>"P@ssw0rd", :user=>"admin"}} }
   let(:transport) { PuppetX::Cisconexus5k::Transport.new(certname, options) }
@@ -71,6 +73,52 @@ describe PuppetX::Cisconexus5k::Facts do
     it "should get correct mac-address of the switch" do
       transport.stub(:command).with("show interface mac-address").and_return(sh_interface_mac)
       expect(facts.retrieve["macaddress"]).to eq("b4:de:31:f2:e3:90")
+    end
+
+    describe "#Interface_link_speed" do
+      before do
+        transport.stub(:command).with("show interface brief").and_return("Eth1/35       1       eth  trunk  up      none                        10G(D) 2 \n")
+        transport.stub(:command).with("show interface Eth1/35 mac-address").and_return(interface_mac_info)
+      end
+
+      it "should get correct interface-port link speed" do
+        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(interface_capabilities)
+        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("10000")
+      end
+
+      it "should set 25000 speed for max_speed" do
+        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'QSFP-100G-CR4')
+        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("25000")
+      end
+
+      it "should set 100000 speed for max_speed" do
+        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'QSFP-40/100-SRBD').gsub(/1000,10000,25000/, '10000,25000,100000')
+
+        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("100000")
+      end
+
+      it "should set 100000 speed for max_speed for cable type QSFP-4X10G-AOC" do
+        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'QSFP-4X10G-AOC').gsub(/1000,10000,25000/, '10000,25000,100000')
+
+        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("10000")
+      end
+
+      it "should set max speed 40000 for cable type QSFP-40G-CR4" do
+        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'QSFP-40G-CR4').gsub(/1000,10000,25000/, '10000,40000,100000')
+
+        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("40000")
+      end
+
+      it "should set max_speed 25000 for cable type SFP-10/25G-LR-S" do
+        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'SFP-10/25G-LR-S').gsub(/1000,10000,25000/, '10000,40000,100000')
+
+        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("25000")
+      end
     end
   end
 end
