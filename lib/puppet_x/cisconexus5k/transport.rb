@@ -629,11 +629,7 @@ class PuppetX::Cisconexus5k::Transport
         execute("mtu #{should[:mtu]}")
       end
 
-      if is[:speed]
-        execute("speed #{is[:speed]}")
-      else
-        execute("speed #{should[:speed]}")
-      end
+      execute("speed #{resource[:speed]}")
 
       if resource[:enforce_portchannel] == "true"
         add_port_channel_interface(should, resource[:is_lacp], resource[:port_channel])
@@ -696,12 +692,7 @@ class PuppetX::Cisconexus5k::Transport
     if should[:mtu]
       execute("mtu #{should[:mtu]}")
     end
-
-    if existing_config[:speed]
-      execute("speed #{existing_config[:speed]}")
-    else
-      execute("speed #{should[:speed]}")
-    end
+    execute("speed #{should[:speed]}")
   end
 
   def add_port_channel_interface(should, is_lacp, port_channel)
@@ -1129,12 +1120,7 @@ class PuppetX::Cisconexus5k::Transport
         execute("mtu #{should[:mtu]}")
       end
 
-      if should[:speed]
-        expected_interface_port_info = parse_interfaces(should[:interface_port])
-        existing_port_speed = expected_interface_port_info[should[:interface_port]][:speed]
-
-        existing_port_speed ? execute("speed #{existing_port_speed}") : execute("speed #{should[:speed]}")
-      end
+      execute("speed #{should[:speed]}")
     else
       Puppet.info "A port channel #{portchannel} is being configured into access mode."
       # check if port-channel is in trunk mode

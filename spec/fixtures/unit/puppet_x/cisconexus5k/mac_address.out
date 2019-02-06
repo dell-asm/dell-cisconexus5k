@@ -1,0 +1,7 @@
+show interface ethernet 1/34 mac-address
+
+--------------------------------------------------------------------------------
+Interface                  Mac-Address     Burn-in Mac-Address
+--------------------------------------------------------------------------------
+Ethernet1/34               b4de.31f2.e397  b4de.31f2.e3b9
+PGNET-CET-RowE-Rack13-N93180_1#

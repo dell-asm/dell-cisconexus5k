@@ -1,0 +1,29 @@
+Ethernet1/34
+  Model:                 N9K-C93180YC-EX
+  Type (SFP capable):    SFP-H10GB-CU2M
+  Speed:                 1000,10000,25000
+  Duplex:                full
+  Trunk encap. type:     802.1Q
+  Channel:               yes
+  Broadcast suppression: percentage(0-100)
+  Flowcontrol:           rx-(off/on),tx-(off/on)
+  Rate mode:             dedicated
+  Port mode:             Routed,Switched
+  QOS scheduling:        rx-(8q2t),tx-(7q)
+  CoS rewrite:           yes
+  ToS rewrite:           yes
+  SPAN:                  yes
+  UDLD:                  yes
+  MDIX:                  no
+  TDR capable:           no
+  Link Debounce:         yes
+  Link Debounce Time:    yes
+  FEX Fabric:            yes
+  dot1Q-tunnel mode:     yes
+  Pvlan Trunk capable:   no
+  Port Group Members:    133
+  EEE (efficient-eth):   no
+  PFC capable:           yes
+  Buffer Boost capable:  no
+  Breakout capable:      no
+  MACSEC capable:        no
