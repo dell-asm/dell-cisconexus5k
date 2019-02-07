@@ -150,28 +150,27 @@ class PuppetX::Cisconexus5k::Facts
         unless lines[0].nil?
           line = lines[0].split(" ")
           mac_address = normalize_mac(line[2])
-          # get the max speed capability of interface
-          interface_speed_res = @transport.command("show interface #{interface_name} capabilities")
-          speed = nil
+          # get the cable speed with transceiver details
+          transceiver_res = @transport.command("show interface #{interface_name} transceiver")
+          speed = ""
           port_max_speed = nil
           cable_max_speed = nil
-          unless interface_speed_res.split("\n").any? {|line| line =~ /^\s+Type.*:.*(-\()?unknown(\))?$/}
-            interface_speed_res.split("\n").each do |line|
-              if line =~ /^\s+Type.*:\s+\w+-([a-zA-Z]*(\d+\/)?)(\d\D)?(\d+)(G|GB)?-\w+/
-                cable_max_speed = (Integer($4) * 1000)
-              end
+          unless transceiver_res.split("\n").any? {|line| line.include?("transceiver is not present")}
+            transceiver_res.split("\n").find {|line| line =~ /^\s+type is\s+\w+-([a-zA-Z]*(\d+\/)?)(\d\D)?(\d+)(G|GB)?-\w+/}
+            cable_max_speed = (Integer($4) * 1000) if $4
+            # get the max speed capability of interface only if cable is connected
+            interface_speed_res = @transport.command("show interface #{interface_name} capabilities")
+            interface_speed_res.split("\n").find {|line| line =~ /^\s+Speed:\s+(\S+)/}
+            port_max_speed = Integer($1.split(",").last) if $1
 
-              if line =~ /^\s+Speed:\s+(\S+)/
-                port_max_speed = Integer($1.split(",").last)
-              end
+            if port_max_speed && cable_max_speed
+              speed = ([port_max_speed, cable_max_speed].min).to_s
             end
-
-            speed = [port_max_speed, cable_max_speed].min
           end
 
           fact = {:interface_name => res[0], :type => res[2], :mode => res[3], :status => res[4], :speed => res[length - 2],
                   :portchannel => res[length - 1], :reason => res[5..length - 3], :tagged_vlan => taggedvlan,
-                  :untagged_vlan => untaggedvlan, :macaddress => mac_address, :max_speed => speed.to_s}
+                  :untagged_vlan => untaggedvlan, :macaddress => mac_address, :max_speed => speed}
           facts[fact[:interface_name]] = fact.to_json
         end
       end

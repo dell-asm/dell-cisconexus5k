@@ -11,6 +11,7 @@ describe PuppetX::Cisconexus5k::Facts do
   let(:sh_int_trunk_output) { File.read(File.join(fact_fixtures,"sh_int_trunk.out"))}
   let(:lldp_info) {File.read(File.join(fact_fixtures,"lldp_info.out"))}
   let(:interface_capabilities) {File.read(File.join(fact_fixtures, "capabilities.out"))}
+  let(:transceiver_details) {File.read(File.join(fact_fixtures, "transceiver_details.out"))}
   let(:interface_mac_info) {File.read(File.join(fact_fixtures, "mac_address.out"))}
   let(:certname) { "cisconexus5k-172.17.7.15" }
   let(:options) { {:device_config=>{:scheme=>"ssh", :host=>"172.17.11.13", :port=>22, :password=>"P@ssw0rd", :user=>"admin"}} }
@@ -82,41 +83,55 @@ describe PuppetX::Cisconexus5k::Facts do
       end
 
       it "should get correct interface-port link speed" do
+        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceiver_details)
         transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(interface_capabilities)
         expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("10000")
       end
 
       it "should set 25000 speed for max_speed" do
-        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'QSFP-100G-CR4')
-        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'QSFP-100G-CR4')
+        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(interface_capabilities)
+        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
+
         expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("25000")
       end
 
       it "should set 100000 speed for max_speed" do
-        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'QSFP-40/100-SRBD').gsub(/1000,10000,25000/, '10000,25000,100000')
+        capabilities = interface_capabilities.gsub(/1000,10000,25000/, '10000,25000,100000')
+        transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'QSFP-40/100-SRBD')
 
         transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
+
         expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("100000")
       end
 
       it "should set 100000 speed for max_speed for cable type QSFP-4X10G-AOC" do
-        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'QSFP-4X10G-AOC').gsub(/1000,10000,25000/, '10000,25000,100000')
+        capabilities = interface_capabilities.gsub(/1000,10000,25000/, '10000,25000,100000')
+        transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'QSFP-4X10G-AOC')
 
         transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
+
         expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("10000")
       end
 
       it "should set max speed 40000 for cable type QSFP-40G-CR4" do
-        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'QSFP-40G-CR4').gsub(/1000,10000,25000/, '10000,40000,100000')
+        capabilities = interface_capabilities.gsub(/1000,10000,25000/, '10000,40000,100000')
+        transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'QSFP-40G-CR4')
 
         transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
+
         expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("40000")
       end
 
       it "should set max_speed 25000 for cable type SFP-10/25G-LR-S" do
-        capabilities = interface_capabilities.gsub(/SFP-H10GB-CU2M/, 'SFP-10/25G-LR-S').gsub(/1000,10000,25000/, '10000,40000,100000')
+        capabilities = interface_capabilities.gsub(/1000,10000,25000/, '10000,40000,100000')
+        transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'SFP-10/25G-LR-S')
 
         transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
         expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("25000")
       end
     end
