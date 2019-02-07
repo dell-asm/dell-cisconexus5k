@@ -134,6 +134,15 @@ describe PuppetX::Cisconexus5k::Facts do
         transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
         expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("25000")
       end
+
+      it "should set max_speed 25000 for cable type QSFP40G-4SFP10G-CU5M" do
+        capabilities = interface_capabilities.gsub(/1000,10000,25000/, '10000,40000,100000')
+        transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'QSFP40G-4SFP10G-CU5M')
+
+        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
+        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
+        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("10000")
+      end
     end
   end
 end
