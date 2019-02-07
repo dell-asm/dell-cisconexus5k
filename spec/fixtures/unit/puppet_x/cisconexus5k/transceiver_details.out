@@ -1,0 +1,11 @@
+Ethernet1/2
+    transceiver is present
+    type is SFP-H10GB-CU3M
+    name is Amphenol
+    part number is 616740003
+    revision is C
+    serial number is CN053HVN624558W
+    nominal bitrate is 10300 MBit/sec
+    Link length supported for copper is 3 m
+    cisco id is 3
+    cisco extended id number is 4
