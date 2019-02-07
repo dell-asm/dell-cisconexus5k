@@ -156,8 +156,8 @@ class PuppetX::Cisconexus5k::Facts
           port_max_speed = nil
           cable_max_speed = nil
           unless transceiver_res.split("\n").any? {|line| line.include?("transceiver is not present")}
-            transceiver_res.split("\n").find {|line| line =~ /^\s+type is\s+\w+-([a-zA-Z]*(\d+\/)?)(\d\D)?(\d+)(G|GB)?-\w+/}
-            cable_max_speed = (Integer($4) * 1000) if $4
+            transceiver_res.split("\n").find {|line| line =~ /^\s+type is\s+\w+-((\d?(\D+))?(\d+\/)?)(\d+)(GB|G)?-\w+/}
+            cable_max_speed = (Integer($5) * 1000) if $5
             # get the max speed capability of interface only if cable is connected
             interface_speed_res = @transport.command("show interface #{interface_name} capabilities")
             interface_speed_res.split("\n").find {|line| line =~ /^\s+Speed:\s+(\S+)/}
