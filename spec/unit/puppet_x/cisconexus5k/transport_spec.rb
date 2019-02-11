@@ -222,6 +222,21 @@ describe PuppetX::Cisconexus5k::Transport do
 
       transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
     end
+
+    it "should not add untagged vlans to the trunk ports" do
+      resource = {:name => "Eth1/5", :enforce_portchannel => "false", :port_channel => "200", :untagged_general_vlans => "NONE", :tagged_general_vlans => "17", :ensure => :present,
+                  :istrunkforinterface => "true", :mtu => "9216", :speed => "10000", :removeallassociatedvlans => "true"}
+      is_resource = {:switchport_mode => "trunk", :port_channel => nil, :untagged_general_vlans => "22", :tagged_general_vlans => "17,99", :access_vlan => nil}
+
+      expect(transport).to receive(:execute).with("show interface Eth1/5")
+      expect(transport).to receive(:execute).with("conf t")
+      expect(transport).to receive(:execute).with("interface Eth1/5")
+      expect(transport).to receive(:execute).with("show interface Eth1/5 trunk").and_return("Operational Mode: trunk")
+      expect(transport).to receive(:execute).with("no switchport trunk native vlan")
+      expect(transport).not_to receive(:execute).with("switchport trunk allowed vlan add 1")
+
+      transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
+    end
   end
 
   describe "#update_tagged_vlans" do

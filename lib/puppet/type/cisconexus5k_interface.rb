@@ -37,6 +37,8 @@ Puppet::Type.newtype(:cisconexus5k_interface) do
       value.split(',').each do |vlan_value|
         raise ArgumentError, "Invalid range definition: #{value}" if value.include?('-') && value.split('-').size != 2
         vlan_value.split('-').each do |vlan|
+          # vlan needs to be removed if value is NONE, skipping validation in this case
+          next if vlan == "NONE"
           all_valid_characters = vlan =~ /^[0-9]+$/
           raise ArgumentError, "An invalid VLAN ID #{vlan_value} is entered.All VLAN values must be between 1 and 4094." unless all_valid_characters && vlan.to_i >= 1 && vlan.to_i <= 4094
         end

@@ -457,9 +457,12 @@ class PuppetX::Cisconexus5k::Transport
 
   def update_interface(resource, is = {}, should = {}, interface_id = {}, is_native = {})
     if is_native || is_native == "true"
-      native_vlan_id = Integer(resource[:untagged_general_vlans]) if resource[:untagged_general_vlans]
+      if resource[:untagged_general_vlans] && resource[:untagged_general_vlans] != "NONE"
+        native_vlan_id = Integer(resource[:untagged_general_vlans])
+      else
+        native_vlan_id = resource[:untagged_general_vlans]
+      end
     end
-
     Puppet.debug("Performing the update interfaces for Cisco Nexus")
     responseinterface = execute("show interface #{interface_id}")
     if responseinterface =~ /Invalid/
@@ -548,7 +551,6 @@ class PuppetX::Cisconexus5k::Transport
     # We're creating or updating an entry
     execute("conf t")
     execute("interface #{interface_id}")
-
     if is[:port_channel]
       if resource[:port_channel]
         Puppet.debug("Interface %s is already configured with %s. Only adds vlans in port_channel" % [interface_id, is[:port_channel]])
@@ -583,7 +585,6 @@ class PuppetX::Cisconexus5k::Transport
           return
         end
       end
-
       if resource[:removeallassociatedvlans] == "true"
         Puppet.info("The associated VLANs are being deleted.")
         execute("no switchport trunk allowed vlan")
@@ -599,11 +600,15 @@ class PuppetX::Cisconexus5k::Transport
         if native_vlan_id != is[:untagged_general_vlans] && resource[:removeallassociatedvlans] == "false"
           Puppet.debug("Initial Native vlan has been changed.")
         end
-
         if resource[:removeallassociatedvlans] == "true"
           Puppet.info("A switch interface with a native VLAN is being configured.")
-          Puppet.debug("Command: 'switchport trunk native vlan #{native_vlan_id}'")
-          execute("switchport trunk native vlan #{native_vlan_id}")
+          if native_vlan_id != "NONE"
+            Puppet.debug("Command: 'switchport trunk native vlan #{native_vlan_id}'")
+            execute("switchport trunk native vlan #{native_vlan_id}")
+          else
+            Puppet.debug("Command: 'no switchport trunk native vlan'")
+            execute("no switchport trunk native vlan")
+          end
         end
       elsif is_native == "false" || is_native == :false
         Puppet.info("Need to remove the native vlan configuration.")
@@ -614,10 +619,10 @@ class PuppetX::Cisconexus5k::Transport
 
       if is[:tagged_general_vlans].nil? || resource[:removeallassociatedvlans] == "true"
         execute("switchport trunk allowed vlan #{resource[:tagged_general_vlans]}")
-        execute("switchport trunk allowed vlan add #{native_vlan_id}") if native_vlan_id
+        execute("switchport trunk allowed vlan add #{native_vlan_id}") if native_vlan_id && native_vlan_id != "NONE"
       else
         execute("switchport trunk allowed vlan add #{resource[:tagged_general_vlans]}")
-        execute("switchport trunk allowed vlan add #{native_vlan_id}") if native_vlan_id
+        execute("switchport trunk allowed vlan add #{native_vlan_id}") if native_vlan_id && native_vlan_id != "NONE"
       end
 
       if should[:mtu]
@@ -683,7 +688,9 @@ class PuppetX::Cisconexus5k::Transport
     execute("switchport")
     execute("switchport mode access")
     unless existing_config[:access_vlan] == should[:access_vlan]
-      execute("switchport access vlan #{should[:access_vlan]}")  if should[:deletenativevlaninformation] == "true"
+      if should[:deletenativevlaninformation] == "true"
+        should[:access_vlan] == "NONE" ? execute("no switchport access vlan") : execute("switchport access vlan #{should[:access_vlan]}")
+      end
     end
 
     if should[:mtu]
@@ -1188,7 +1195,6 @@ class PuppetX::Cisconexus5k::Transport
       execute("switchport mode trunk")
     end
 
-    vlans_present = "false"
     out = execute("show interface #{portchannel} switchport")
 
     if out =~ /Trunking VLANs Allowed:\s(\S+)\s/
@@ -1208,13 +1214,13 @@ class PuppetX::Cisconexus5k::Transport
       end
     end
 
-    if existing_native_vlan == "1" || overide_native_vlan == "true"
-      execute("switchport trunk allowed vlan add #{un_tagged}")
-      execute("switchport trunk native vlan #{un_tagged}")
-    end
-
-    if existing_native_vlan == un_tagged
-      execute("switchport trunk allowed vlan add #{un_tagged}")
+    if overide_native_vlan == "true"
+      if un_tagged != "NONE"
+        execute("switchport trunk allowed vlan add #{un_tagged}")
+        execute("switchport trunk native vlan #{un_tagged}")
+      else
+        execute("no switchport trunk native vlan")
+      end
     end
 
     return
