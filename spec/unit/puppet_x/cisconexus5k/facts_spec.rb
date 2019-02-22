@@ -96,17 +96,7 @@ describe PuppetX::Cisconexus5k::Facts do
         expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("25000")
       end
 
-      it "should set 100000 speed for max_speed" do
-        capabilities = interface_capabilities.gsub(/1000,10000,25000/, '10000,25000,100000')
-        transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'QSFP-40/100-SRBD')
-
-        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
-        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
-
-        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("100000")
-      end
-
-      it "should set 100000 speed for max_speed for cable type QSFP-4X10G-AOC" do
+      it "should set 10000 speed for max_speed for cable type QSFP-4X10G-AOC" do
         capabilities = interface_capabilities.gsub(/1000,10000,25000/, '10000,25000,100000')
         transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'QSFP-4X10G-AOC')
 
@@ -125,23 +115,18 @@ describe PuppetX::Cisconexus5k::Facts do
 
         expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("40000")
       end
+    end
 
-      it "should set max_speed 25000 for cable type SFP-10/25G-LR-S" do
-        capabilities = interface_capabilities.gsub(/1000,10000,25000/, '10000,40000,100000')
-        transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'SFP-10/25G-LR-S')
-
-        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
-        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
-        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("25000")
-      end
-
-      it "should set max_speed 25000 for cable type QSFP40G-4SFP10G-CU5M" do
-        capabilities = interface_capabilities.gsub(/1000,10000,25000/, '10000,40000,100000')
-        transceriver_info = transceiver_details.gsub(/SFP-H10GB-CU3M/, 'QSFP40G-4SFP10G-CU5M')
-
-        transport.stub(:command).with("show interface Eth1/35 capabilities").and_return(capabilities)
-        transport.stub(:command).with("show interface Eth1/35 transceiver").and_return(transceriver_info)
-        expect(JSON.parse(facts.retrieve["Eth1/35"])["max_speed"]).to eq("10000")
+    describe "#get_speed_from_cable" do
+      let(:supported_cables) {{"QSFP40G-4SFP10G-CU5M" => "10000", "QSFP-4X10G-AOC" => "10000", "QSFP-40/100-SRBD" => "100000",
+                               "QSFP-40G-CR4" => "40000", "SFP-10/25G-LR-S" => "25000", "QSFP-100G-CR4" => "100000",
+                               "10GBASE-SR" => "10000", "FET-10G" => "10000", "10G-SFP" => "10000", "25GBASE-SR" => "25000",
+                               "SFP-25G-SR-S" => "25000", "SFP-25G-AOC10M" => "25000", "1000BASE-T" => "1000000",
+                               "10Gbase-SR" => "10000", "CVR-QSFP-SFP10G" => "10000", "QSFP-40G-SR-BD" => "40000"}}
+      it "should set correct speed based on the cable type" do
+        supported_cables.keys.each do |cable_type|
+          expect(facts.get_speed_from_cable(cable_type).to_s).to eq(supported_cables[cable_type])
+        end
       end
     end
   end

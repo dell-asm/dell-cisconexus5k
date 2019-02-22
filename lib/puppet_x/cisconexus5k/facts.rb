@@ -155,9 +155,15 @@ class PuppetX::Cisconexus5k::Facts
           speed = ""
           port_max_speed = nil
           cable_max_speed = nil
+          cable_type = nil
           unless transceiver_res.split("\n").any? {|line| line.include?("transceiver is not present")}
-            transceiver_res.split("\n").find {|line| line =~ /^\s+type is\s+\w+-((\d?(\D+))?(\d+\/)?)(\d+)(GB|G)?-\w+/}
-            cable_max_speed = (Integer($5) * 1000) if $5
+            transceiver_res.split("\n").each do |line|
+              if line.include?("type is")
+                cable_type = line.split(" ").last
+                port_speed = get_speed_from_cable(cable_type)
+                cable_max_speed = port_speed if port_speed
+              end
+            end
             # get the max speed capability of interface only if cable is connected
             interface_speed_res = @transport.command("show interface #{interface_name} capabilities")
             interface_speed_res.split("\n").find {|line| line =~ /^\s+Speed:\s+(\S+)/}
@@ -170,7 +176,7 @@ class PuppetX::Cisconexus5k::Facts
 
           fact = {:interface_name => res[0], :type => res[2], :mode => res[3], :status => res[4], :speed => res[length - 2],
                   :portchannel => res[length - 1], :reason => res[5..length - 3], :tagged_vlan => taggedvlan,
-                  :untagged_vlan => untaggedvlan, :macaddress => mac_address, :max_speed => speed}
+                  :untagged_vlan => untaggedvlan, :macaddress => mac_address, :max_speed => speed, :cable_type => cable_type}
           facts[fact[:interface_name]] = fact.to_json
         end
       end
@@ -332,6 +338,15 @@ class PuppetX::Cisconexus5k::Facts
     end
 
     mac
+  end
+
+  # Gets the port speed form the given cable_type
+  def get_speed_from_cable(cable_type)
+    if cable_type =~ /(\w+-)?((\d?(\D+))?(\d+\/)?)(\d+)(GB|G)?(Gbase|GBASE)?(-\w+)?/
+      return (Integer($6) * 1000) if $6
+    end
+
+    nil
   end
 
   def vlan_data
