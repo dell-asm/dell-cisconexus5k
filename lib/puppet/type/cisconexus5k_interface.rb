@@ -165,6 +165,14 @@ Puppet::Type.newtype(:cisconexus5k_interface) do
     end
   end
 
+  newproperty(:port_desc) do
+    desc "port description"
+    defaultto(:none)
+    munge do |value|
+      value.to_s
+    end
+  end
+
   newproperty(:removeallassociatedvlans) do
     desc "Remove all associated vlans or not."
     newvalues("true", "false")

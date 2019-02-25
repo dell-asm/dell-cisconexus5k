@@ -473,6 +473,7 @@ class PuppetX::Cisconexus5k::Transport
       Puppet.info "The interface #{interface_id} is getting unconfigured or removed."
       execute("conf t")
       execute("interface #{interface_id}")
+      execute("no description")
 
       if is[:port_channel]
         Puppet.debug("Removing port-channel %s from %s" % [is[:port_channel], interface_id])
@@ -559,6 +560,7 @@ class PuppetX::Cisconexus5k::Transport
         execute("no channel-group")
       end
     end
+    execute("description #{resource[:port_desc]}") if resource[:removeallassociatedvlans] == "true"
 
     if resource[:istrunkforinterface] == "true"
       Puppet.debug("Verify whether or not the specified interface is already configured as a trunk interface.")
