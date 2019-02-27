@@ -47,6 +47,7 @@ describe PuppetX::Cisconexus5k::Transport do
       expect(transport).to receive(:execute).with("speed 10000")
       expect(transport).to receive(:execute).with("mtu 9216")
       expect(transport).to receive(:execute).with("no shutdown")
+      expect(transport).to receive(:parse_interfaces).and_return(interface_config)
       expect(transport).not_to receive(:execute).with("switchport mode access")
 
       transport.update_port_channel("17,19", "20", {}, is, should, "200", "true", {}, "present")
