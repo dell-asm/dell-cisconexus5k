@@ -621,8 +621,6 @@ class PuppetX::Cisconexus5k::Transport
         Puppet.debug("Command: 'no switchport trunk native vlan #{native_vlan_id}'")
         execute("no switchport trunk native vlan")
       end
-      execute("spanning-tree port type edge trunk")
-      execute("spanning-tree guard loop")
 
       if is[:tagged_general_vlans].nil? || resource[:removeallassociatedvlans] == "true"
         execute("switchport trunk allowed vlan #{resource[:tagged_general_vlans]}")
@@ -632,14 +630,18 @@ class PuppetX::Cisconexus5k::Transport
         execute("switchport trunk allowed vlan add #{native_vlan_id}") if native_vlan_id && native_vlan_id != "NONE"
       end
 
-      if should[:mtu]
-        execute("mtu #{should[:mtu]}")
-      end
+      if resource[:removeallassociatedvlans] == "true"
+        execute("spanning-tree port type edge trunk")
+        execute("spanning-tree guard loop")
+        if should[:mtu]
+          execute("mtu #{should[:mtu]}")
+        end
 
-      if is[:speed] && resource[:speed] == :Auto
-        execute("speed #{is[:speed]}")
-      else
-        execute("speed #{resource[:speed]}")
+        if is[:speed] && resource[:speed] == :Auto
+          execute("speed #{is[:speed]}")
+        else
+          execute("speed #{resource[:speed]}")
+        end
       end
 
       if resource[:enforce_portchannel] == "true"
@@ -702,17 +704,20 @@ class PuppetX::Cisconexus5k::Transport
         should[:access_vlan] == "NONE" ? execute("no switchport access vlan") : execute("switchport access vlan #{should[:access_vlan]}")
       end
     end
-    execute("spanning-tree port type edge")
-    execute("spanning-tree guard loop")
 
-    if should[:mtu]
-      execute("mtu #{should[:mtu]}")
-    end
+    if should[:deletenativevlaninformation] == "true"
+      execute("spanning-tree port type edge")
+      execute("spanning-tree guard loop")
 
-    if existing_config[:speed] && should[:speed] == :Auto
-      execute("speed #{existing_config[:speed]}")
-    else
-      execute("speed #{should[:speed]}")
+      if should[:mtu]
+        execute("mtu #{should[:mtu]}")
+      end
+
+      if existing_config[:speed] && should[:speed] == :Auto
+        execute("speed #{existing_config[:speed]}")
+      else
+        execute("speed #{should[:speed]}")
+      end
     end
   end
 
@@ -1129,9 +1134,6 @@ class PuppetX::Cisconexus5k::Transport
         execute("no switchport trunk native vlan")
       end
 
-      execute("spanning-tree port type edge trunk")
-      execute("spanning-tree guard loop")
-
       # for now portchannel defaults to dot1q
       portchannelencapsulationtype = "dot1q"
 
@@ -1144,18 +1146,22 @@ class PuppetX::Cisconexus5k::Transport
         end
       end
 
-      if should[:mtu]
+      if should[:mtu] && should[:removeallassociatedvlans] == "true"
         execute("mtu #{should[:mtu]}")
       end
 
-      if should[:speed]
-        expected_interface_port_info = parse_interfaces(should[:interface_port])
-        existing_port_speed = expected_interface_port_info[should[:interface_port]][:speed]
+      if should[:removeallassociatedvlans] == "true"
+        execute("spanning-tree port type edge trunk")
+        execute("spanning-tree guard loop")
+        if should[:speed]
+          expected_interface_port_info = parse_interfaces(should[:interface_port])
+          existing_port_speed = expected_interface_port_info[should[:interface_port]][:speed]
 
-        if existing_port_speed && should[:speed] == :Auto
-          execute("speed #{existing_port_speed}")
-        else
-          execute("speed #{should[:speed]}")
+          if existing_port_speed && should[:speed] == :Auto
+            execute("speed #{existing_port_speed}")
+          else
+            execute("speed #{should[:speed]}")
+          end
         end
       end
     else
@@ -1185,19 +1191,21 @@ class PuppetX::Cisconexus5k::Transport
         execute("switcport access vlan #{access_vlan}")
       end
 
-      execute("spanning-tree port type edge")
-      execute("no spanning-tree guard loop")
+      if should[:removeallassociatedvlans] == "true"
+        execute("spanning-tree port type edge")
+        execute("no spanning-tree guard loop")
 
-      if should[:vpc]
-        execute(" no vpc") if !is[:vpc].nil?
-        if is[:vpc] != should[:vpc]
-          execute("vpc #{should[:vpc]}")
+        if should[:vpc]
+          execute(" no vpc") if !is[:vpc].nil?
+          if is[:vpc] != should[:vpc]
+            execute("vpc #{should[:vpc]}")
+          end
         end
-      end
 
-      if should[:mtu] && should[:speed]
-        execute("speed #{should[:speed]}")
-        execute("mtu #{should[:mtu]}")
+        if should[:mtu] && should[:speed]
+          execute("speed #{should[:speed]}")
+          execute("mtu #{should[:mtu]}")
+        end
       end
     end
     execute("no shutdown")
