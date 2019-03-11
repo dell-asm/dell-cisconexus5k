@@ -167,7 +167,7 @@ class PuppetX::Cisconexus5k::Facts
             # get the max speed capability of interface only if cable is connected
             interface_speed_res = @transport.command("show interface #{interface_name} capabilities")
             interface_speed_res.split("\n").find {|line| line =~ /^\s+Speed:\s+(\S+)/}
-            port_max_speed = Integer($1.split(",").last) if $1
+            port_max_speed = Integer($1.split(",").last) if $1 && $1 != "auto"
 
             if port_max_speed && cable_max_speed
               speed = ([port_max_speed, cable_max_speed].min).to_s
