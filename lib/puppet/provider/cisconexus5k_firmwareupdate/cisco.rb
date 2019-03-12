@@ -160,13 +160,6 @@ Puppet::Type.type(:cisconexus5k_firmwareupdate).provide :cisconexus5k, :parent =
 
 
   def flush
-    transport.command do |dev|
-    interface = resource[:name]
-    # native vlans can be used only on truck mode.
-    is_native = resource[:istrunkforinterface]
-
-    dev.update_interface(resource, former_properties, properties, interface, is_native)
-    end
-    super
+    Puppet.debug("in firmwareupdate flush method")
   end
 end
