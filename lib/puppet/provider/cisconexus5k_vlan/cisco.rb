@@ -21,6 +21,12 @@ Puppet::Type.type(:cisconexus5k_vlan).provide :cisconexus5k, :parent => Puppet::
     end
     super
   end
+
+  def self.post_resource_eval()
+    Puppet.info "Saving running-config to start-up config"
+    @transport.execute("copy running-config startup-config")
+    super()
+  end
 end
 
 

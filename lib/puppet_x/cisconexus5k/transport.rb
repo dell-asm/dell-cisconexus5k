@@ -46,7 +46,6 @@ class PuppetX::Cisconexus5k::Transport
     @enable_password = device_conf[:password]
     #options[:enable_password] || parse_enable(device_conf[:password])
     @session.default_prompt = /\r.*[#>]\s?\z/n
-
   end
 
   #def credential
@@ -104,10 +103,10 @@ class PuppetX::Cisconexus5k::Transport
   end
 
   def command(cmd = nil)
-    connect
+    connect unless session.channel
     out = execute(cmd) if cmd
     yield self if block_given?
-    disconnect
+
     out
   end
 
@@ -450,9 +449,6 @@ class PuppetX::Cisconexus5k::Transport
     end
 
     execute("exit")
-
-    Puppet.info "Saving running-config to start-up config"
-    execute("copy running-config startup-config")
   end
 
   def update_interface(resource, is = {}, should = {}, interface_id = {}, is_native = {})
@@ -529,11 +525,6 @@ class PuppetX::Cisconexus5k::Transport
       execute("exit")
     else
       configure_interface_port(resource, is, should, interface_id, is_native, native_vlan_id)
-    end
-
-    if resource[:save_start_up_config] && resource[:save_start_up_config] == "true"
-      Puppet.info "Saving running-config to start-up config"
-      execute("copy running-config startup-config")
     end
   end
 

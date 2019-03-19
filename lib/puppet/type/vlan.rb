@@ -203,9 +203,4 @@ Puppet::Type.newtype(:vlan) do
       value.to_s
     end
   end
-
-  newproperty(:save_start_up_config) do
-    desc "saves running-config to startup config"
-    defaultto "true"
-    end
 end
