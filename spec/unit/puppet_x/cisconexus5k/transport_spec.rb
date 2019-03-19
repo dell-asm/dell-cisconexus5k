@@ -259,21 +259,6 @@ describe PuppetX::Cisconexus5k::Transport do
 
       transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
     end
-
-    it "should copy running config when save_start_up_config is true and ensure absent" do
-      resource = {:name => "Eth1/5", :enforce_portchannel => "false", :port_channel => "200", :tagged_general_vlans => "17", :ensure => :absent,
-                  :istrunkforinterface => "false", :save_start_up_config => "true", :removeallassociatedvlans => "true"}
-      is_resource = {}
-      expect(transport).to receive(:execute).with("show interface Eth1/5")
-      expect(transport).to receive(:execute).with("conf t")
-      expect(transport).to receive(:execute).with("interface Eth1/5")
-      expect(transport).to receive(:execute).with("no description")
-      expect(transport).to receive(:un_configure_access_port)
-      expect(transport).to receive(:execute).with("exit").twice
-
-      expect(transport).to receive(:execute).with("copy running-config startup-config")
-      transport.update_interface(resource, is_resource, should, "Eth1/5", "true")
-    end
   end
 
   describe "#update_tagged_vlans" do
