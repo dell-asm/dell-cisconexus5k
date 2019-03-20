@@ -696,7 +696,7 @@ class PuppetX::Cisconexus5k::Transport
       end
     end
 
-    if should[:deletenativevlaninformation] == "true"
+    if should[:removeallassociatedvlans] == "true"
       execute("spanning-tree port type edge")
       execute("spanning-tree guard loop")
 
@@ -1184,7 +1184,7 @@ class PuppetX::Cisconexus5k::Transport
 
       if should[:removeallassociatedvlans] == "true"
         execute("spanning-tree port type edge")
-        execute("no spanning-tree guard loop")
+        execute("spanning-tree guard loop")
 
         if should[:vpc]
           execute(" no vpc") if !is[:vpc].nil?
