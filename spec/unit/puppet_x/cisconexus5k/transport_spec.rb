@@ -61,7 +61,7 @@ describe PuppetX::Cisconexus5k::Transport do
       expect(transport).to receive(:execute).with("switchport mode access")
       expect(transport).to receive(:execute).with("switcport access vlan 20")
       expect(transport).to receive(:execute).with("spanning-tree port type edge")
-      expect(transport).to receive(:execute).with("no spanning-tree guard loop")
+      expect(transport).to receive(:execute).with("spanning-tree guard loop")
       expect(transport).to receive(:execute).with("speed 10000")
       expect(transport).to receive(:execute).with("mtu 9216")
       expect(transport).to receive(:execute).with("no shutdown")
