@@ -13,12 +13,12 @@ Puppet::Type.newtype(:cisconexus5k_firmwareupdate) do
     defaultto :false
   end
 
-  newparam(:copy_to_tftp) do
-    "2 element array, ['path to tftp share','path under tftp share']\nFor example: ['/var/lib/tftpshare','catalog1/firmware.bin']\n***Requires path param"
+  newparam(:copy_to_http) do
+    "2 element array, ['path to http share','path under http share']\nFor example: ['/var/lib/razor/repo-store/firmware','catalog1/firmware.bin']\n***Requires path param"
   end
 
   newparam(:path) do
-    "The original firmware location path.  This has to be used in conjuction with to copy_to_tftp param"
+    "The original firmware location path.  This has to be used in conjuction with to copy_to_http param"
   end
 
   newproperty(:url) do
@@ -50,10 +50,10 @@ Puppet::Type.newtype(:cisconexus5k_firmwareupdate) do
 
     def sync
       event = :executed_command
-      self.resource[:copy_to_tftp] ? copy_to_tftp = self.resource[:copy_to_tftp] : nil
+      self.resource[:copy_to_http] ? copy_to_http = self.resource[:copy_to_http] : nil
       self.resource[:path] ? path = self.resource[:path] : nil
-      Puppet.debug("cisco copy_to_tftp value: #{copy_to_tftp} new path is : #{path}")
-      out = provider.run(self.resource[:url], self.resource[:force], copy_to_tftp, path)
+      Puppet.debug("cisco copy_to_http value: #{copy_to_http} new path is : #{path}")
+      out = provider.run(self.resource[:url], self.resource[:force], copy_to_http, path)
       event
     end
   end

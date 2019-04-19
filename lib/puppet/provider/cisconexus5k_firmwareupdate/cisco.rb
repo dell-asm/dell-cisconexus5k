@@ -23,10 +23,10 @@ Puppet::Type.type(:cisconexus5k_firmwareupdate).provide :cisconexus5k, :parent =
     end
   end
 
-  def run(url, force, copy_to_tftp=nil, path=nil)
+  def run(url, force, copy_to_http=nil, path=nil)
     Puppet.debug("cisconexus5k Puppet::Cisco_Nexus_firmwareUpdate*********************")
-    if copy_to_tftp
-      move_to_tftp(copy_to_tftp,path)
+    if copy_to_http
+      move_to_http(copy_to_http,path)
     end
 
     responsetxt ="firmware update failed"
@@ -141,21 +141,21 @@ Puppet::Type.type(:cisconexus5k_firmwareupdate).provide :cisconexus5k, :parent =
     return true
   end
 
-  def move_to_tftp(copy_to_tftp, path)
+  def move_to_http(copy_to_http, path)
     Puppet.debug("Path::"+path)
-    Puppet.debug("Copying files to TFTP share")
-    tftp_share = copy_to_tftp[0]
-    tftp_path = copy_to_tftp[1]
+    Puppet.debug("Copying files to HTTP share")
+    http_share = copy_to_http[0]
+    http_path = copy_to_http[1]
 
-    full_tftp_path = tftp_share + "/" + tftp_path
-    Puppet.debug("full_tftp_path  --> "+full_tftp_path)
-    tftp_dir = full_tftp_path.split('/')[0..-2].join('/')
-    Puppet.debug("tftp_dir --> "+tftp_dir)
-    if !File.exist? tftp_dir
-      FileUtils.mkdir_p tftp_dir
+    full_http_path = http_share + "/" + http_path
+    Puppet.debug("full_http_path  --> "+full_http_path)
+    http_dir = full_http_path.split('/')[0..-2].join('/')
+    Puppet.debug("http_dir --> "+http_dir)
+    if !File.exist? http_dir
+      FileUtils.mkdir_p http_dir
     end
-    FileUtils.cp path, full_tftp_path
-    FileUtils.chmod_R 0755, tftp_dir
+    FileUtils.cp path, full_http_path
+    FileUtils.chmod_R 0755, http_dir
   end
 
 
