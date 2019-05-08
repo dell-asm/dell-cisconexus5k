@@ -45,6 +45,7 @@ describe PuppetX::Cisconexus5k::Facts do
       ASM::DeviceManagement.stub(:parse_device_config).and_return(options[:device_config])
       transport.stub(:command).and_return("rspec rsult mocking")
       transport.stub(:host).and_return("100.68.100.100")
+      transport.stub(:command).with("show feature  | grep vpc").and_return(" \n vpc                    1          enabled")
       facts.stub(:get_vlan_information)
     end
 
@@ -52,6 +53,11 @@ describe PuppetX::Cisconexus5k::Facts do
       cisco_5k_model = "cisco Nexus5548 Chassis"
       transport.stub(:command).with("sh ver").and_return(cisco_5k_model)
       expect(facts.retrieve["model"]).to eq("Nexus5548")
+    end
+
+    it "should get vpc status" do
+      cisco_5k_model = "cisco Nexus5548 Chassis"
+      expect(facts.retrieve["vpc_feature"]).to eq("enabled")
     end
 
     it "should get cisco 3k model name" do
