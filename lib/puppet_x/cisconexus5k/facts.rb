@@ -55,6 +55,10 @@ class PuppetX::Cisconexus5k::Facts
       end
     end
 
+    # vpc feature status on the switch
+    result = @transport.command("show feature  | grep vpc")
+    facts["vpc_feature"] = result.split("\n")[1].include?("enabled") ? "enabled" : "disabled"
+
     # mac_address of the switch
     out = @transport.command("show interface mac-address")
     out.split("\n").each do |line|
