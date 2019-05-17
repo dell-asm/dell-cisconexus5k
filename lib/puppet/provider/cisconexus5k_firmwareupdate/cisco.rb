@@ -42,6 +42,22 @@ Puppet::Type.type(:cisconexus5k_firmwareupdate).provide :cisconexus5k, :parent =
     Puppet.debug("*** Cisco Version*********")
     Puppet.debug(installedversion)
 
+    Puppet.debug("*** Deleting Uninstalled Binaries, if any. *********")
+    delete_uninstalled_binaries
+    is_bin_file_compactable = is_bin_file_compactable?(path, installedversion)
+    if(is_bin_file_compactable)
+      Puppet.debug("*************************************************")
+      Puppet.debug("Compacting Installed Cisco Switch firmware binary")
+      Puppet.debug("*************************************************")
+      installed_image_file_details = ""
+      out =  send_command("show version | grep image")
+      installed_image_file_details << out.scan(/NXOS.+bin/i)[0]
+      Puppet.debug("Installed Image File Details = "+installed_image_file_details)
+      installed_image_file_name = installed_image_file_details.split("\/").last
+      out = send_command("install all nxos "+ installed_image_file_name +" compact")
+      Puppet.debug("*** Installed Image File Compacted ***")
+    end
+
     Puppet.debug("Flash file path ::" + flashfilepath)
     copysuccessful = copy_binary_to_switch(url,filename)
     unless copysuccessful
@@ -61,6 +77,12 @@ Puppet::Type.type(:cisconexus5k_firmwareupdate).provide :cisconexus5k, :parent =
       Puppet.debug("**************************************")
       confirminstall=false
       out = send_command("install all nxos "+ flashfilepath +"  non-interruptive")
+      unless out.scan('not installed try compact' | 'Use compact image').empty?
+        #Install failed due to low space. Compact and Install the binary.
+        if(is_bin_file_compactable)
+          out = send_command("install all nxos "+ flashfilepath +" non-interruptive compact")
+        end
+      end
       responsetxt ="firmware update is successfull"
     else
       err = "Unable to update firmware as the version matches the current installed version"
@@ -158,6 +180,46 @@ Puppet::Type.type(:cisconexus5k_firmwareupdate).provide :cisconexus5k, :parent =
     FileUtils.chmod_R 0755, http_dir
   end
 
+  def delete_uninstalled_binaries
+    out =  send_command("dir bootflash: | grep nxos")
+    bin_file_arr =  out.scan(/nxos\S+bin/)
+    bin_file_arr.each do |bin_file|
+      send_command("delete bootflash:"+bin_file+" no-prompt")
+    end
+  end
+
+  # File compact is attempted only when the free space is less than the size of the
+  # image file to be copied. Compact is supported only on version nxos.7.0.3.I3.1.bin
+  # or greater than nxos.7.0.3.I3.1.bin and on 31xx series switches.
+  def is_bin_file_compactable?(path, installedversion)
+    Puppet.debug("*** In is_bin_file_compactable?(). File - "+path)
+    file_size = File.size(path)
+    Puppet.debug(file_size)
+    free_space_details = ""
+    out = send_command("dir bootflash: | grep free")
+    free_space_details << out.scan(/\d+\s+bytes free/i).first
+    free_space = free_space_details.split(" ").first
+    Puppet.debug(free_space)
+    if(file_size > free_space.to_i)
+      out = send_command("show version | grep Chassis")
+      cisco_switch_details = ""
+      cisco_switch_details << out.scan(/cisco.+Chassis/i).first
+      Puppet.debug(cisco_switch_details)
+      cisco_switch_series = cisco_switch_details.split(" ")[2]
+      Puppet.debug(cisco_switch_series)
+      if (cisco_switch_series =~ /31\d+./i)
+        min_version_supporting_compact = "7.0(3)I3(1)"
+        installed_version_num = installedversion.gsub(/[^\d]/, '')
+        Puppet.debug("Installed version number= %s " % [installedversionNum])
+        min_version_supporting_compact_num = min_version_supporting_compact.gsub(/[^\d]/, '')
+        if(installed_version_num.to_i >= min_version_supporting_compact_num.to_i)
+          Puppet.debug("Installed version supports Compacting...")
+          return true
+        end
+      end
+    end
+    return false
+  end
 
   def flush
     Puppet.debug("in firmwareupdate flush method")
