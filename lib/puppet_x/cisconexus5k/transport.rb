@@ -506,7 +506,8 @@ class PuppetX::Cisconexus5k::Transport
         execute("no channel-group")
         Puppet.info "removing spanning tree."
         execute("no spanning-tree port type edge trunk")
-        execute("no spanning-tree guard loop")
+        execute("no spanning-tree bpduguard enable")
+        execute("no spanning-tree guard root")
         execute("no mtu")
         if resource[:shutdownswitchinterface] == "true" && resource[:unconfiguretrunkmode] == "false"
           Puppet.info "The interface #{interface_id} is being shut down."
@@ -574,7 +575,8 @@ class PuppetX::Cisconexus5k::Transport
         if resource[:removeallassociatedvlans] == "true"
           Puppet.debug("changing interface to trunk from access port")
           execute("no spanning-tree port type edge")
-          execute("no spanning-tree guard loop")
+          execute("no spanning-tree bpduguard enable")
+          execute("no spanning-tree guard root")
           execute("switchport mode trunk")
         else
           # at this stage port is in access port-mode and server is already configured should not update port-mode
@@ -623,7 +625,8 @@ class PuppetX::Cisconexus5k::Transport
 
       if resource[:removeallassociatedvlans] == "true"
         execute("spanning-tree port type edge trunk")
-        execute("spanning-tree guard loop")
+        execute("spanning-tree bpduguard enable")
+        execute("spanning-tree guard root")
         if should[:mtu]
           execute("mtu #{should[:mtu]}")
         end
@@ -662,7 +665,8 @@ class PuppetX::Cisconexus5k::Transport
 
         Puppet.info("spanning tree config is being removed")
         execute("no spanning-tree port type edge trunk")
-        execute("no spanning-tree guard loop")
+        execute("no spanning-tree bpduguard enable")
+        execute("no spanning-tree guard root")
       end
 
       if resource[:deletenativevlaninformation] == "true"
@@ -681,7 +685,8 @@ class PuppetX::Cisconexus5k::Transport
   def un_configure_access_port(access_vlan)
     execute("no switchport access vlan")
     execute("no spanning-tree port type edge")
-    execute("no spanning-tree guard loop")
+    execute("no spanning-tree bpduguard enable")
+    execute("no spanning-tree guard root")
     execute("no channel-group")
     execute("no switchport mode access")
     execute("no mtu")
@@ -698,7 +703,8 @@ class PuppetX::Cisconexus5k::Transport
 
     if should[:removeallassociatedvlans] == "true"
       execute("spanning-tree port type edge")
-      execute("spanning-tree guard loop")
+      execute("spanning-tree bpduguard enable")
+      execute("spanning-tree guard root")
 
       if should[:mtu]
         execute("mtu #{should[:mtu]}")
@@ -1111,7 +1117,8 @@ class PuppetX::Cisconexus5k::Transport
           Puppet.debug("Changing access type port-channel to trunk")
           execute("no spanning-tree port type edge")
           execute("no switchport mode access")
-          execute("no spanning-tree guard loop")
+          execute("no spanning-tree bpduguard enable")
+          execute("no spanning-tree guard root")
         end
       end
 
@@ -1143,7 +1150,8 @@ class PuppetX::Cisconexus5k::Transport
 
       if should[:removeallassociatedvlans] == "true"
         execute("spanning-tree port type edge trunk")
-        execute("spanning-tree guard loop")
+        execute("spanning-tree bpduguard enable")
+        execute("spanning-tree guard root")
         if should[:speed]
           expected_interface_port_info = parse_interfaces(should[:interface_port])
           existing_port_speed = expected_interface_port_info[should[:interface_port]][:speed]
@@ -1168,7 +1176,8 @@ class PuppetX::Cisconexus5k::Transport
           Puppet.debug("Changing trunk type port-channel to access")
           execute("no spanning-tree port type edge trunk")
           execute("no switchport mode trunk")
-          execute("no spanning-tree guard loop")
+          execute("no spanning-tree bpduguard enable")
+          execute("no spanning-tree guard root")
         end
       end
 
@@ -1184,7 +1193,8 @@ class PuppetX::Cisconexus5k::Transport
 
       if should[:removeallassociatedvlans] == "true"
         execute("spanning-tree port type edge")
-        execute("spanning-tree guard loop")
+        execute("spanning-tree bpduguard enable")
+        execute("spanning-tree guard root")
 
         if should[:vpc]
           execute(" no vpc") if !is[:vpc].nil?
