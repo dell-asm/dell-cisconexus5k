@@ -71,7 +71,11 @@ Puppet::Type.type(:cisconexus5k_firmwareupdate).provide :cisconexus5k, :parent =
     end
 
     Puppet.debug("Copy startup config")
-    send_command("copy running-config startup-config" , :prompt => /Copy complete|fail/)
+    if(!copy_startup_config())
+      err = "Unable to update firmware version as copy startup config failed"
+      Puppet.debug("*********"+err+"*********")
+      raise err
+    end
 
     Puppet.debug("**************************************")
     Puppet.debug("Upgrading Cisco Switch firmware")
@@ -145,6 +149,17 @@ Puppet::Type.type(:cisconexus5k_firmwareupdate).provide :cisconexus5k, :parent =
       Puppet.debug("Successfully copied the file")
     end
     return copysuccess
+  end
+
+  def copy_startup_config()
+    updateout = ''
+	copystartupconfigresponse = ''
+    send_command("copy running-config startup-config") do |out|
+      updateout<<out
+    end
+	Puppet.debug("updateout copy startup config")
+	Puppet.debug(updateout)
+    return true
   end
 
   def move_to_http(copy_to_http, path)
