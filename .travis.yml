@@ -1,6 +1,6 @@
 language: ruby
-sudo: false
 script: "bundle exec rake"
+dist: precise
 rvm:
   - 1.9.3
 before_install:
