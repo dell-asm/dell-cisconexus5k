@@ -87,7 +87,7 @@ class PuppetX::Cisconexus5k::Facts
     end
 
     out=@transport.command("show snmp community")
-    item = out.scan(/(\w+)\s+\w+-\w+/).flatten
+    item = out.scan(/(\S+)\s+\w+-\w+/).flatten
 
     unless item.empty?
       facts["snmp_community_string"] = item.to_json
